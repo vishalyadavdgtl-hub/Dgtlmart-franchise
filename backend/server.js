@@ -23,17 +23,25 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin || 
-        origin.endsWith('.vercel.app') || 
-        origin === 'https://partner.dgtlmart.com' ||
-        origin === 'http://localhost:5173') {
+    const allowedOrigins = [
+      'https://partner.dgtlmart.com',
+      'http://localhost:5173',
+      'http://localhost:3000'
+    ];
+    
+    // Allow requests with no origin (e.g., mobile apps, curl)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // Safely reject CORS without throwing a 500 error
+      callback(null, false); 
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
   credentials: true
 }));
 
