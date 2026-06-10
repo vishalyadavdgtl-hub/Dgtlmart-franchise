@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const FranchiseBuyer = require('../models/FranchiseBuyer');
 const ReferralPartner = require('../models/ReferralPartner');
 const Contact = require('../models/Contact');
-const { sendPasswordResetEmail, sendOTPEmail } = require('../utils/emailService');
+const { sendPasswordResetEmail, sendOTPEmail, sendContactNotificationEmail } = require('../utils/emailService');
 const { generateReferralCode } = require('../utils/codeGenerator');
 const OTPVerification = require('../models/OTPVerification');
 
@@ -343,6 +343,19 @@ exports.submitContact = async (req, res) => {
     });
 
     await contact.save();
+
+    try {
+      await sendContactNotificationEmail({
+        name,
+        email,
+        phone,
+        service,
+        message
+      });
+    } catch (emailError) {
+      console.error('Failed to send contact notification email:', emailError);
+      // We don't want to fail the whole request if email fails, so we just log it.
+    }
 
     res.status(201).json({
       message: 'Inquiry submitted successfully',

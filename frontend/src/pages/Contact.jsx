@@ -182,12 +182,15 @@ export default function Contact() {
                     onChange={handleChange}
                     className="w-full px-0 py-3 bg-transparent outline-none text-slate-800 appearance-none cursor-pointer font-semibold text-base pr-8"
                   >
-                    <option value="" disabled>Select Service *</option>
+                    <option value="" disabled>Select Service / Inquiry Type *</option>
+                    <option value="Buy a Franchise">Buy a Franchise</option>
+                    <option value="Referral Partnership">Referral Partnership</option>
                     <option value="Website Development">Website Development</option>
-                    <option value="SEO Services">SEO Services</option>
-                    <option value="Social Media Packages">Social Media Packages</option>
-                    <option value="Google Ads">Google Ads</option>
-                    <option value="Meta Ads">Meta Ads</option>
+                    <option value="SEO & Social Media">SEO & Social Media</option>
+                    <option value="Performance Marketing (Ads)">Performance Marketing (Ads)</option>
+                    <option value="Partner Cards">Partner Cards</option>
+                    <option value="General Inquiry">General Inquiry</option>
+                    <option value="Support">Support</option>
                   </select>
                   <div className="absolute right-0 bottom-4 pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -201,10 +201,52 @@ const sendOTPEmail = async (email, otp) => {
   });
 };
 
+const sendContactNotificationEmail = async (contactData) => {
+  const adminEmail = process.env.ADMIN_EMAIL || 'info@dgtlmart.com';
+  
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+      <h2 style="color: #2563eb; text-align: center;">New Contact Inquiry</h2>
+      <p>Hello Admin,</p>
+      <p>A new contact inquiry has been submitted on the website. Here are the details:</p>
+      <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;"><strong>Name:</strong></td>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">${contactData.name}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;"><strong>Email:</strong></td>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">${contactData.email}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;"><strong>Phone:</strong></td>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">${contactData.phone}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;"><strong>Service:</strong></td>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">${contactData.service}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;"><strong>Message:</strong></td>
+          <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">${contactData.message}</td>
+        </tr>
+      </table>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${process.env.FRONTEND_URL || 'https://partner.dgtlmart.com'}/admin/contacts" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">View in Admin Panel</a>
+      </div>
+      <hr style="border: 0; border-top: 1px solid #e0e0e0; margin: 20px 0;" />
+      <p style="font-size: 12px; color: #666; text-align: center;">&copy; 2025 DGTLmart. All rights reserved.</p>
+    </div>
+  `;
+
+  await zeptoSend(adminEmail, 'New Contact Inquiry - DGTLmart', htmlContent);
+};
+
 module.exports = {
   sendPasswordResetEmail,
   sendAgreementEmail,
   sendApprovalEmail,
   sendRejectionEmail,
-  sendOTPEmail
+  sendOTPEmail,
+  sendContactNotificationEmail
 };
