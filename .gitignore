@@ -1,0 +1,38 @@
+# Multi-module gitignore
+
+# Build and IDE
+node_modules/
+dist/
+build/
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment and Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+
+# Logs and temporary files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+err.txt
+err.txt
+diagnosis_output.txt
+search_output.txt
+test_output.txt
+success.txt
+
+# OS
+.DS_Store
+Thumbs.db
