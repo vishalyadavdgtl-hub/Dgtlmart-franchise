@@ -154,6 +154,10 @@ router.put('/partner-update/:id', authMiddleware, async (req, res) => {
       'partnerType',
       'franchiseType',
       'referralLink',
+      'customBrandingKitUrl',
+      'customProposalsUrl',
+      'customDriveUrl',
+      'customCrmUrl',
     ];
 
     // Req body se sirf allowed fields nikaalo
@@ -166,6 +170,10 @@ router.put('/partner-update/:id', authMiddleware, async (req, res) => {
 
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ error: 'Koi valid field nahi mili update karne ke liye' });
+    }
+
+    if (updateData.status) {
+      updateData.isApproved = updateData.status === 'ACTIVE';
     }
 
     const updated = await ReferralPartner.findByIdAndUpdate(
@@ -220,5 +228,9 @@ router.put('/leads/:leadId/status', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// System Settings
+router.get('/settings', authMiddleware, adminController.getSettings);
+router.put('/settings', authMiddleware, adminController.updateSettings);
 
 module.exports = router;

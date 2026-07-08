@@ -28,17 +28,6 @@ exports.sendOTP = async (req, res) => {
       return res.status(400).json({ error: 'Email and phone are required for OTP' });
     }
 
-    // Check for duplicates
-    const existingEmail = await ReferralPartner.findOne({ email });
-    if (existingEmail) {
-      return res.status(400).json({ error: 'Email already registered' });
-    }
-
-    const existingPhone = await ReferralPartner.findOne({ phone });
-    if (existingPhone) {
-      return res.status(400).json({ error: 'Phone already registered' });
-    }
-
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 

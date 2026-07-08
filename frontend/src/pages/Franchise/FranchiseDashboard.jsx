@@ -165,6 +165,7 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
   const [user, setUser] = useState(null);
   const location = useLocation();
   const [isSaving, setIsSaving] = useState(false);
+  const [systemSettings, setSystemSettings] = useState(null);
 
   const { partnerId } = useParams();
   const isAdminView = !!adminPartner || !!partnerId;
@@ -388,7 +389,7 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
           setStats(dashRes.data);
         }
       }
-      await Promise.all([fetchPackages(), fetchTraining(), fetchLeads()]);
+      await Promise.all([fetchPackages(), fetchTraining(), fetchLeads(), fetchSystemSettings()]);
     } catch (err) {
       console.log(err);
     } finally {
@@ -417,6 +418,15 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
       const res = await adminAPI.getTrainingModules();
       setTraining(res.data.modules || []);
     } catch { }
+  };
+
+  const fetchSystemSettings = async () => {
+    try {
+      const res = await franchiseDashboardAPI.getSettings();
+      if (res.data) setSystemSettings(res.data);
+    } catch (err) {
+      console.error("Error fetching settings:", err);
+    }
   };
 
   const fetchLeads = async () => {
@@ -1050,20 +1060,35 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
             <h2 className="text-xl font-bold text-slate-800">Branding & CRM Tools</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { title: "🎨 Branding Kit", desc: "Download logos, banners, social media templates, and brand guidelines.", link: "https://drive.google.com/drive/folders/dgtlmart-branding", label: "Access Branding Kit", color: "from-purple-500 to-pink-500" },
-                { title: "📄 Ready Proposals", desc: "Professional pitch decks and proposals ready to present.", link: "https://drive.google.com/drive/folders/dgtlmart-proposal", label: "View Proposals", color: "from-blue-500 to-indigo-600" },
-                { title: "🎯 Promotion Material", desc: "Ad creatives, flyers, and digital content for promoting.", link: "https://drive.google.com/drive/folders/dgtlmart-promo", label: "Open Drive", color: "from-amber-500 to-orange-600" },
-                { title: "📊 CRM Access (Zoho)", desc: "Manage your leads and customers using our integrated CRM.", link: "https://crm.zoho.com", label: "Open CRM", color: "from-emerald-500 to-teal-600" },
+                { key: "customBrandingKitUrl", title: "🎨 Branding Kit", desc: "Download logos, banners, social media templates, and brand guidelines.", link: mergedStats?.customBrandingKitUrl || systemSettings?.brandingKitUrl || "https://drive.google.com/drive/folders/dgtlmart-branding", label: "Access Branding Kit", color: "from-purple-500 to-pink-500" },
+                { key: "customProposalsUrl", title: "📄 Ready Proposals", desc: "Professional pitch decks and proposals ready to present.", link: mergedStats?.customProposalsUrl || systemSettings?.proposalsUrl || "https://drive.google.com/drive/folders/dgtlmart-proposal", label: "View Proposals", color: "from-blue-500 to-indigo-600" },
+                { key: "customDriveUrl", title: "🎯 Promotion Material", desc: "Ad creatives, flyers, and digital content for promoting.", link: mergedStats?.customDriveUrl || systemSettings?.driveUrl || "https://drive.google.com/drive/folders/dgtlmart-promo", label: "Open Drive", color: "from-amber-500 to-orange-600" },
+                { key: "customCrmUrl", title: "📊 CRM Access (Zoho)", desc: "Manage your leads and customers using our integrated CRM.", link: mergedStats?.customCrmUrl || systemSettings?.crmUrl || "https://crm.zoho.com", label: "Open CRM", color: "from-emerald-500 to-teal-600" },
               ].map((tool) => (
                 <div key={tool.title} className="bg-white rounded-2xl border shadow-sm overflow-hidden">
                   <div className={`bg-gradient-to-r ${tool.color} p-5 text-white`}>
                     <h3 className="text-lg font-bold">{tool.title}</h3>
                   </div>
-                  <div className="p-5">
-                    <p className="text-slate-600 text-sm mb-4">{tool.desc}</p>
-                    <a href={tool.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition">
-                      {tool.label}
-                    </a>
+                  <div className="p-5 flex flex-col gap-4">
+                    <p className="text-slate-600 text-sm">{tool.desc}</p>
+                    
+                    {isAdminEditMode ? (
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">Custom User URL (optional)</label>
+                        <input 
+                          type="url"
+                          value={editedStats[tool.key] ?? mergedStats[tool.key] ?? ""}
+                          onChange={(e) => handleAdminEdit(tool.key, e.target.value)}
+                          placeholder="Override global link here..."
+                          className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1">Leave empty to use Global System Setting</p>
+                      </div>
+                    ) : (
+                      <a href={tool.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition w-fit">
+                        {tool.label}
+                      </a>
+                    )}
                   </div>
                 </div>
               ))}

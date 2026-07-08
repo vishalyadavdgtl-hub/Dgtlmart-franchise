@@ -23,6 +23,7 @@ import AgreementManagement from "./pages/Admin/AgreementManagement";
 import TrainingManagement from "./pages/Admin/TrainingManagement";
 import LeadManagement from "./pages/Admin/LeadManagement";
 import ExplorePackages from "./pages/Admin/ExplorePackages";
+import SettingsManagement from "./pages/Admin/SettingsManagement";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import ResetPassword from "./pages/Auth/ResetPassword";
 import ProtectedRoute from "./components/common/ProtectedRoute";
@@ -85,6 +86,7 @@ function App() {
           <Route path="/admin/training" element={<ProtectedRoute><TrainingManagement /></ProtectedRoute>} />
           <Route path="/admin/leads" element={<ProtectedRoute><LeadManagement /></ProtectedRoute>} />
           <Route path="/admin/explore-packages" element={<ProtectedRoute><ExplorePackages /></ProtectedRoute>} />
+          <Route path="/admin/settings" element={<ProtectedRoute><SettingsManagement /></ProtectedRoute>} />
 
           {/* ✅ Purane dono routes redirect honge naye pe */}
           <Route

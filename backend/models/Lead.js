@@ -16,7 +16,8 @@ const leadSchema = new mongoose.Schema({
 
   phone: {
     type: String,
-    required: true
+    required: true,
+    match: [/^\d{10,15}$/, 'Phone must be 10-15 digits']
   },
 
   // 🔥 DGTLmart fields

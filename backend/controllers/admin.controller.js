@@ -485,9 +485,9 @@ exports.deleteReferral = async (req, res) => {
   }
 };
 
-// Delete franchise buyer (protected)
 exports.deleteBuyer = async (req, res) => {
   try {
+    const { id } = req.params;
     const buyer = await ReferralPartner.findByIdAndDelete(id);
 
     if (!buyer) {
@@ -614,5 +614,43 @@ exports.updateReferral = async (req, res) => {
   } catch (error) {
     console.error("Update error:", error);
     res.status(500).json({ message: "Failed to update referral" });
+  }
+};
+
+// System Settings
+exports.getSettings = async (req, res) => {
+  try {
+    const SystemSettings = require('../models/SystemSettings');
+    let settings = await SystemSettings.findOne();
+    if (!settings) {
+      settings = await SystemSettings.create({});
+    }
+    res.json(settings);
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    res.status(500).json({ error: 'Server error fetching settings' });
+  }
+};
+
+exports.updateSettings = async (req, res) => {
+  try {
+    const SystemSettings = require('../models/SystemSettings');
+    const { brandingKitUrl, proposalsUrl, driveUrl, crmUrl } = req.body;
+    
+    let settings = await SystemSettings.findOne();
+    if (!settings) {
+      settings = new SystemSettings();
+    }
+    
+    if (brandingKitUrl !== undefined) settings.brandingKitUrl = brandingKitUrl;
+    if (proposalsUrl !== undefined) settings.proposalsUrl = proposalsUrl;
+    if (driveUrl !== undefined) settings.driveUrl = driveUrl;
+    if (crmUrl !== undefined) settings.crmUrl = crmUrl;
+    
+    await settings.save();
+    res.json({ message: 'Settings updated successfully', settings });
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    res.status(500).json({ error: 'Server error updating settings' });
   }
 };

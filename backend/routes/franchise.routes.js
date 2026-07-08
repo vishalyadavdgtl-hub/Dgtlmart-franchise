@@ -3,6 +3,7 @@ const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 const approvedMiddleware = require('../middleware/approvedMiddleware');
 const franchiseController = require('../controllers/franchise.controller');
+const adminController = require('../controllers/admin.controller');
 
 // Get all packages
 router.get('/packages', authMiddleware, franchiseController.getPackages);
@@ -36,5 +37,8 @@ router.post('/client/reset-password/:token', franchiseController.resetPassword);
 
 // Franchise Dashboard (requires auth + approval)
 router.get('/dashboard', approvedMiddleware, franchiseController.getFranchiseDashboard);
+
+// Get System Settings (Public for dashboard use)
+router.get('/settings', adminController.getSettings);
 
 module.exports = router;

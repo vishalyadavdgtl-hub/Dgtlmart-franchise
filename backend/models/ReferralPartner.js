@@ -20,7 +20,8 @@ const referralPartnerSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: true
+    required: true,
+    match: [/^\d{10,15}$/, 'Phone must be 10-15 digits']
   },
   address: {
     type: String,
@@ -163,6 +164,10 @@ const referralPartnerSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  customBrandingKitUrl: { type: String, default: null },
+  customProposalsUrl: { type: String, default: null },
+  customDriveUrl: { type: String, default: null },
+  customCrmUrl: { type: String, default: null },
   status: {
     type: String,
     enum: ['PENDING', 'ACTIVE', 'REJECTED'],

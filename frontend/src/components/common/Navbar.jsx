@@ -27,9 +27,17 @@ export default function Navbar({ isAdmin = false, onLogout }) {
   useEffect(() => {
     const checkPartnerAuth = () => {
       const partnerData = localStorage.getItem("partnerData");
+      const partnerUser = localStorage.getItem("partnerUser");
+      const partnerToken = localStorage.getItem("partnerToken");
       if (partnerData) {
         setIsPartnerLoggedIn(true);
         const data = JSON.parse(partnerData);
+        setPartnerName(data.fullName || "Partner");
+        setPartnerType(data.partnerType || "referral");
+        setPartnerRole(data.role || "");
+      } else if (partnerUser && partnerToken) {
+        setIsPartnerLoggedIn(true);
+        const data = JSON.parse(partnerUser);
         setPartnerName(data.fullName || "Partner");
         setPartnerType(data.partnerType || "referral");
         setPartnerRole(data.role || "");

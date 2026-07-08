@@ -117,6 +117,10 @@ export const adminAPI = {
   sendAgreement: (data) => api.post('/admin/agreements/send', data),
   updateAgreementStatus: (id, data) => api.patch(`/admin/agreements/${id}/status`, data),
   deleteAgreement: (id) => api.delete(`/admin/agreements/${id}`),
+
+  // System Settings
+  getSettings: () => api.get('/admin/settings'),
+  updateSettings: (data) => api.put('/admin/settings', data),
 };
 
 // Explore Package APIs (Dynamic Services)
@@ -153,6 +157,7 @@ export const leadAPI = {
 // Franchise user dashboard (uses partnerToken)
 export const franchiseDashboardAPI = {
   getDashboard: () => api.get('/franchise/dashboard'),
+  getSettings: () => api.get('/franchise/settings'),
 };
 
 export default api;
