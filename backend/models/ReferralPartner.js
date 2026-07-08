@@ -49,8 +49,7 @@ const referralPartnerSchema = new mongoose.Schema({
   referralCode: {
     type: String,
     unique: true,
-    sparse: true,
-    default: null
+    sparse: true
   },
   referralLink: {
     type: String,
