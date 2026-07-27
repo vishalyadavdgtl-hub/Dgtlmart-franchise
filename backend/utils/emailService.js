@@ -4,9 +4,12 @@ const zeptoSend = async (to, subject, htmlContent) => {
   const url = process.env.ZEPTO_URL || 'https://api.zeptomail.com/v1.1/email';
   const senderEmail = process.env.ZEPTO_EMAIL || 'support@dgtldigicard.com';
 
+  // Handle comma-separated emails
+  const toArray = to.split(',').map(email => ({ email_address: { address: email.trim() } }));
+
   const payload = JSON.stringify({
     from: { address: senderEmail, name: "DGTLmart Support" },
-    to: [{ email_address: { address: to } }],
+    to: toArray,
     subject: subject,
     htmlbody: htmlContent
   });
