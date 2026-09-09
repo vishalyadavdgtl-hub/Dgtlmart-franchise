@@ -93,7 +93,7 @@ const [sendingOtp, setSendingOtp] = useState(false);
     }
 
     if (!formData.otp) {
-      showToast('Please enter the OTP sent to your email', 'error');
+      showToast('Please enter the OTP sent to your mobile number', 'error');
       return;
     }
 
@@ -124,7 +124,7 @@ const [sendingOtp, setSendingOtp] = useState(false);
     try {
       await referralAPI.sendOTP({ email: formData.email, phone: formData.phone });
       setOtpSent(true);
-      showToast('OTP sent successfully to your email!', 'success');
+      showToast('OTP sent successfully to your mobile number!', 'success');
     } catch (error) {
       console.error('OTP send error:', error);
       showToast(error.response?.data?.error || 'Failed to send OTP', 'error');
@@ -402,7 +402,7 @@ const [sendingOtp, setSendingOtp] = useState(false);
                       type="text"
                       maxLength={6}
                     />
-                    <p className="text-xs text-gray-500 mt-2 text-center">OTP sent to {formData.email}</p>
+                    <p className="text-xs text-gray-500 mt-2 text-center">OTP sent to {formData.phone}</p>
                   </div>
                 )}
 

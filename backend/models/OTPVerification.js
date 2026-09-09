@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const otpVerificationSchema = new mongoose.Schema({
   email: {
     type: String,
+    required: false, // Made optional for mobile OTPs
+  },
+  phone: {
+    type: String,
     required: true,
   },
   otp: {

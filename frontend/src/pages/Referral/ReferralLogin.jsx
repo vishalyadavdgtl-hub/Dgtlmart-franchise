@@ -12,44 +12,101 @@ export default function ReferralLogin() {
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  const [loginRole, setLoginRole] = useState('referral'); // 'referral' or 'franchise'
+  const [loginRole, setLoginRole] = useState('referral');
+  const [loginMethod, setLoginMethod] = useState('email');
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0); // countdown in seconds
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    phone: '',
+    otp: ''
   });
 
   useEffect(() => {
     setIsLoaded(true);
   }, []);
 
+  // Countdown timer for resend OTP
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const interval = setInterval(() => {
+      setResendTimer(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'phone') {
+      const numericValue = value.replace(/\D/g, '').slice(0, 10);
+      setFormData(prev => ({ ...prev, [name]: numericValue }));
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSendOTP = async () => {
+    if (!formData.phone || !/^\d{10}$/.test(formData.phone)) {
+      showToast('Please enter a valid 10-digit mobile number', 'error');
+      return;
+    }
+    setSendingOtp(true);
+    try {
+      await referralAPI.sendLoginOTP({ phone: formData.phone });
+      setOtpSent(true);
+      setResendTimer(60); // start 60s countdown
+      showToast('OTP sent successfully to your mobile number!', 'success');
+    } catch (error) {
+      console.error('OTP send error:', error);
+      showToast(error.response?.data?.error || 'Failed to send OTP', 'error');
+    } finally {
+      setSendingOtp(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (loginMethod === 'phone' && !otpSent) {
+      return handleSendOTP();
+    }
+
     setLoading(true);
     
     try {
-      // include the selected login role so backend enforces role-based login
-      const response = await referralAPI.login({ ...formData, loginRole });
+      let response;
+      if (loginMethod === 'email') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+          showToast('Please enter a valid email address', 'error');
+          setLoading(false);
+          return;
+        }
+        response = await referralAPI.login({ email: formData.email, password: formData.password, loginRole });
+      } else {
+        if (!/^\d{6}$/.test(formData.otp)) {
+          showToast('Please enter a valid 6-digit OTP', 'error');
+          setLoading(false);
+          return;
+        }
+        response = await referralAPI.loginWithOTP({ phone: formData.phone, otp: formData.otp, loginRole });
+      }
       
-      // Store token and user data in unified partnerData for dashboards
       const partnerData = {
         ...response.data.partner,
         token: response.data.token
       };
-     localStorage.setItem("token", response.data.token); // 🔥 MOST IMPORTANT
+      localStorage.setItem("token", response.data.token); 
 
-localStorage.setItem('partnerData', JSON.stringify(partnerData));
-
-localStorage.setItem('partnerToken', response.data.token);
-localStorage.setItem('partnerUser', JSON.stringify(response.data.partner));
+      localStorage.setItem('partnerData', JSON.stringify(partnerData));
+      localStorage.setItem('partnerToken', response.data.token);
+      localStorage.setItem('partnerUser', JSON.stringify(response.data.partner));
       
       showToast('Login successful!', 'success');
       
-      // Redirect based on approval status
       setTimeout(() => {
         const partner = response.data.partner;
         if (partner.status !== "ACTIVE") {
@@ -65,9 +122,7 @@ localStorage.setItem('partnerUser', JSON.stringify(response.data.partner));
     } catch (error) {
       console.error('Login error:', error);
       const msg = error.response?.data?.error || 'Login failed. Please check your credentials.';
-      // If server indicates the account is of a different partner type, switch the role selector to help user
       if (error.response?.status === 403 && msg.includes('registered as a')) {
-        // Extract 'franchise' or 'referral' from message
         const match = msg.match(/registered as a (\w+) partner/i);
         if (match && match[1]) {
           const serverRole = match[1].toLowerCase();
@@ -175,58 +230,137 @@ localStorage.setItem('partnerUser', JSON.stringify(response.data.partner));
                    </p> */}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="john@example.com"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  />
+                {/* Method Selector */}
+                <div className="flex gap-2 p-1 bg-gray-100 rounded-xl mb-4">
+                  <button
+                    type="button"
+                    onClick={() => { setLoginMethod('email'); setOtpSent(false); }}
+                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      loginMethod === 'email' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Email Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setLoginMethod('phone'); setOtpSent(false); }}
+                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      loginMethod === 'phone' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Mobile OTP
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter your password"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  />
-                  <div className="flex justify-end mt-2">
-                    <Link 
-                      to={`/forgot-password?role=${loginRole}`} 
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-                    >
-                      Forgot Password?
-                    </Link>
-                  </div>
-                </div>
+                {loginMethod === 'email' ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="john@example.com"
+                        required={loginMethod === 'email'}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="Enter your password"
+                        required={loginMethod === 'email'}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      />
+                      <div className="flex justify-end mt-2">
+                        <Link 
+                          to={`/forgot-password?role=${loginRole}`} 
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                        >
+                          Forgot Password?
+                        </Link>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Mobile Number
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="Enter 10-digit mobile number"
+                        required={loginMethod === 'phone'}
+                        disabled={otpSent}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-gray-100"
+                      />
+                    </div>
+                    {otpSent && (
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Enter OTP
+                        </label>
+                        <input
+                          type="text"
+                          name="otp"
+                          value={formData.otp}
+                          onChange={handleChange}
+                          placeholder="Enter 6-digit OTP"
+                          maxLength={6}
+                          required={loginMethod === 'phone' && otpSent}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all tracking-[0.5em] text-center font-bold"
+                        />
+                        <div className="flex justify-between items-center mt-2">
+                          <p className="text-xs text-gray-500">OTP sent to {formData.phone}</p>
+                          {resendTimer > 0 ? (
+                            <span className="text-xs font-semibold text-gray-400">
+                              Resend in {resendTimer}s
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleSendOTP}
+                              disabled={sendingOtp}
+                              className="text-xs font-semibold text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                            >
+                              Resend OTP
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || sendingOtp}
                   className="w-full rounded-2xl py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-xl shadow-blue-500/10 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? (
+                  {loading || sendingOtp ? (
                     <span className="flex items-center justify-center gap-2">
                       <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Logging In...
+                      {sendingOtp ? 'Sending OTP...' : 'Logging In...'}
                     </span>
-                  ) : "Login to Dashboard"}
+                  ) : (
+                    loginMethod === 'phone' && !otpSent ? 'Send OTP' : 'Login to Dashboard'
+                  )}
                 </button>
 
                 <div className="text-center mt-4">

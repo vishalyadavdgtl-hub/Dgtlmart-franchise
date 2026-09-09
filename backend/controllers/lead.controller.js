@@ -158,7 +158,7 @@ exports.updateLeadStatus = async (req, res) => {
     const { id } = req.params;
     const { status, notes } = req.body;
 
-    if (!['new', 'assigned', 'in-progress', 'approved', 'closed', 'lost'].includes(status)) {
+    if (!['new', 'assigned', 'in-progress', 'approved', 'converted', 'not-converted', 'closed', 'lost'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status value' });
     }
 

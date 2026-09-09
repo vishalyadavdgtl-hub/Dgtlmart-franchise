@@ -5,6 +5,7 @@ const ReferralPartner = require('../models/ReferralPartner');
 const FranchiseBuyer = require('../models/FranchiseBuyer');
 const { generateReferralCode } = require('../utils/codeGenerator');
 const { sendPasswordResetEmail, sendOTPEmail } = require('../utils/emailService');
+const { sendOTPSMS, validateOTPSMS } = require('../utils/smsService');
 const OTPVerification = require('../models/OTPVerification');
 
 // Send OTP
@@ -26,18 +27,15 @@ exports.sendOTP = async (req, res) => {
       return res.status(400).json({ error: 'Phone already registered' });
     }
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Send SMS via Message Central and get verificationId
+    const verificationId = await sendOTPSMS(phone);
 
     // Store in DB (upsert so user can resend)
     await OTPVerification.findOneAndUpdate(
-      { email },
-      { email, otp, createdAt: new Date() },
+      { phone },
+      { email, phone, otp: verificationId, createdAt: new Date() },
       { upsert: true, new: true }
     );
-
-    // Send email via ZeptoMail
-    await sendOTPEmail(email, otp);
 
     res.json({ message: 'OTP sent successfully' });
   } catch (error) {
@@ -70,8 +68,13 @@ if (partnerType === "franchise" && !franchiseType) {
     }
 
     // Check OTP
-    const otpRecord = await OTPVerification.findOne({ email });
-    if (!otpRecord || otpRecord.otp !== otp) {
+    const otpRecord = await OTPVerification.findOne({ phone });
+    if (!otpRecord || !otpRecord.otp) {
+      return res.status(400).json({ error: 'OTP request not found or expired' });
+    }
+
+    const isValidOTP = await validateOTPSMS(phone, otpRecord.otp, otp);
+    if (!isValidOTP) {
       return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
 
@@ -114,7 +117,7 @@ if (partnerType === "franchise" && !franchiseType) {
     await referralPartner.save();
 
     // Delete OTP record after successful registration
-    await OTPVerification.deleteOne({ email });
+    await OTPVerification.deleteOne({ phone });
 
     res.status(201).json({
       message: 'Referral partner registered successfully. Your account is pending admin approval.',
@@ -187,6 +190,99 @@ exports.login = async (req, res) => {
 
   } catch (error) {
     console.error('Error logging in referral partner:', error);
+    res.status(500).json({ error: 'Server error. Please try again later.' });
+  }
+};
+
+// Send Login OTP
+exports.sendLoginOTP = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+
+    const partner = await ReferralPartner.findOne({ phone });
+    if (!partner) {
+      return res.status(404).json({ error: 'Phone number is not registered' });
+    }
+
+    const verificationId = await sendOTPSMS(phone);
+
+    await OTPVerification.findOneAndUpdate(
+      { phone },
+      { phone, otp: verificationId, createdAt: new Date() },
+      { upsert: true, new: true }
+    );
+
+    res.json({ message: 'OTP sent successfully to your mobile' });
+  } catch (error) {
+    console.error('Error sending login OTP:', error);
+    res.status(500).json({ error: 'Failed to send OTP' });
+  }
+};
+
+// Login with OTP
+exports.loginWithOTP = async (req, res) => {
+  try {
+    const { phone, otp, loginRole } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).json({ error: 'Please provide phone and OTP' });
+    }
+
+    const partner = await ReferralPartner.findOne({ phone });
+    if (!partner) {
+      return res.status(404).json({ error: 'Phone number is not registered' });
+    }
+
+    if (loginRole && partner.partnerType && loginRole !== partner.partnerType) {
+      return res.status(403).json({ error: `This account is registered as a ${partner.partnerType} partner. Please use the ${partner.partnerType} login.` });
+    }
+
+    const otpRecord = await OTPVerification.findOne({ phone });
+    if (!otpRecord || !otpRecord.otp) {
+      return res.status(400).json({ error: 'OTP request not found or expired' });
+    }
+
+    const isValidOTP = await validateOTPSMS(phone, otpRecord.otp, otp);
+    if (!isValidOTP) {
+      return res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
+
+    await OTPVerification.deleteOne({ phone });
+
+    const token = jwt.sign(
+      { 
+        id: partner._id, 
+        email: partner.email,
+        isApproved: partner.isApproved,
+        status: partner.status,
+        role: partner.role || partner.partnerType || 'referral',
+        franchiseType: partner.franchiseType || partner.role || 'referral'
+      },
+      process.env.JWT_SECRET || 'your_jwt_secret',
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      message: 'Login successful',
+      token,
+      partner: {
+        id: partner._id,
+        fullName: partner.fullName,
+        email: partner.email,
+        referralCode: partner.referralCode,
+        partnerType: partner.partnerType,
+        role: partner.role || 'referral',
+        commissionRate: partner.commissionRate,
+        isApproved: partner.isApproved,
+        status: partner.status
+      }
+    });
+
+  } catch (error) {
+    console.error('Error logging in with OTP:', error);
     res.status(500).json({ error: 'Server error. Please try again later.' });
   }
 };
