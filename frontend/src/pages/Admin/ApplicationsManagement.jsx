@@ -145,8 +145,10 @@ export default function ApplicationsManagement() {
                         </div>
 
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Amount Paid</p>
-                          <p className="font-medium text-green-600 font-bold">₹{app.paymentAmount?.toLocaleString('en-IN') || 0}</p>
+                          <p className="text-xs text-gray-500 mb-1">Payment Status</p>
+                          <p className={`font-medium font-bold capitalize ${app.paymentStatus === 'paid' ? 'text-green-600' : 'text-orange-500'}`}>
+                            {app.paymentStatus || 'pending'} (₹{app.paymentAmount?.toLocaleString('en-IN') || 0})
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 mb-1">Profession</p>

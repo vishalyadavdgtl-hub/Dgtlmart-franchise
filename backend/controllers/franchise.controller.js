@@ -307,10 +307,10 @@ exports.buyPackage = async (req, res) => {
         return res.status(404).json({ error: 'Partner not found'});
     }
 
-    partner.selectedPackage = selectedPackage;
-    partner.couponCode = couponCode || null;
-    partner.referredBy = referredBy;
-    partner.paymentAmount = selectedPackage.price;
+    partner.couponCode = couponCode || partner.couponCode || null;
+    if (referredBy && !partner.referredBy) {
+        partner.referredBy = referredBy;
+    }
     
     await partner.save();
 
@@ -353,7 +353,8 @@ exports.verifyPayment = async (req, res) => {
       razorpayOrderId,
       razorpayPaymentId,
       razorpaySignature,
-      buyerId
+      buyerId,
+      selectedPackage
     } = req.body;
 
     const generatedSignature = crypto
@@ -373,8 +374,18 @@ exports.verifyPayment = async (req, res) => {
 
     partner.razorpayPaymentId = razorpayPaymentId;
     partner.razorpaySignature = razorpaySignature;
-    // For franchise, we'll mark payment-status but still require PENDING approval
-    // Note: ReferralPartner model doesn't have paymentStatus yet, we could add it or just use status
+    
+    // Add the purchased service to the array instead of overwriting franchise details
+    if (selectedPackage) {
+      partner.purchasedServices.push({
+        packageName: selectedPackage.packageName || selectedPackage.name,
+        category: selectedPackage.category,
+        price: selectedPackage.price,
+        orderId: razorpayOrderId,
+        paymentId: razorpayPaymentId
+      });
+    }
+
     await partner.save();
 
     if (partner.referredBy) {
@@ -530,10 +541,14 @@ exports.registerAndBuy = async (req, res) => {
       if (partner) referredBy = partner._id;
     }
 
-    partner.selectedPackage = selectedPackage;
-    partner.couponCode = couponCode || null;
-    partner.referredBy = referredBy;
-    partner.paymentAmount = selectedPackage.price;
+    partner.couponCode = couponCode || partner.couponCode || null;
+    if (referredBy && !partner.referredBy) partner.referredBy = referredBy;
+
+    // Only set selectedPackage if this is a new partner (not an existing one to avoid overwriting franchise fee)
+    if (partner.isNew || !partner.selectedPackage || !partner.selectedPackage.packageName) {
+      partner.selectedPackage = selectedPackage;
+      partner.paymentAmount = selectedPackage.price;
+    }
 
 
    // ✅ FREE PACKAGE FIX

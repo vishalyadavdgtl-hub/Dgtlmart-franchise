@@ -1,7 +1,8 @@
 
 const mongoose = require('mongoose');
 const ReferralPartner = require('../models/ReferralPartner');
-require('dotenv').config({ path: '.env' });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 async function fixUser() {
   try {
@@ -20,6 +21,8 @@ async function fixUser() {
       packageName: 'Dost',
       price: 49999, // Adjust if you know the exact price
     };
+    user.paymentAmount = 49999;
+    user.paymentStatus = 'pending';
 
     await user.save();
     console.log('User package updated successfully');

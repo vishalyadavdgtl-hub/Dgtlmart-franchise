@@ -83,6 +83,7 @@ const fetchPackages = async () => {
                 razorpayPaymentId: paymentResponse.razorpay_payment_id,
                 razorpaySignature: paymentResponse.razorpay_signature,
                 buyerId: response.data.buyerId,
+                selectedPackage: packageData
               });
 
               showToast("Package purchased successfully! 🎉", "success");

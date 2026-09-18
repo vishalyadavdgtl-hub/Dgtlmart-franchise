@@ -91,6 +91,14 @@ const referralPartnerSchema = new mongoose.Schema({
     category: String,
     price: Number
   },
+  purchasedServices: [{
+    packageName: String,
+    category: String,
+    price: Number,
+    purchasedAt: { type: Date, default: Date.now },
+    orderId: String,
+    paymentId: String
+  }],
   territory: {
     type: String,
     default: null
