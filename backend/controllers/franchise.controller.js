@@ -49,7 +49,7 @@ exports.sendOTP = async (req, res) => {
 // Client/Buyer Registration
 exports.registerClient = async (req, res) => {
   try {
-    const { fullName, email, password, phone, businessName, address, role, otp } = req.body;
+    const { fullName, email, password, phone, businessName, address, city, state, role, otp, couponCode } = req.body;
 
     if (!fullName || !email || !password || !phone || !businessName || !address) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -80,6 +80,14 @@ exports.registerClient = async (req, res) => {
       return res.status(400).json({ error: 'Phone already registered' });
     }
 
+    let referredBy = null;
+    if (couponCode) {
+      const parent = await ReferralPartner.findOne({ referralCode: couponCode, status: 'ACTIVE' });
+      if (parent) {
+        referredBy = parent._id;
+      }
+    }
+
     // Unified logic: save as ReferralPartner with partnerType: 'franchise'
     const partner = new ReferralPartner({
       fullName,
@@ -88,6 +96,10 @@ exports.registerClient = async (req, res) => {
       phone,
       businessName,
       address,
+      city,
+      state,
+      couponCode: couponCode || null,
+      referredBy,
       partnerType: 'franchise',
       role: role || 'dost',
       commissionRate: (role || 'dost') === 'sathi' ? 30 : 25,
@@ -166,7 +178,8 @@ exports.loginClient = async (req, res) => {
     email: buyer.email,
     role: buyer.role || 'dost',
     status: buyer.status,
-    isApproved: buyer.status === 'ACTIVE'
+    isApproved: buyer.status === 'ACTIVE',
+    paymentStatus: buyer.paymentStatus
   }
     });
   } catch (error) {

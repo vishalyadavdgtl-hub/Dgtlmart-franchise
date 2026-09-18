@@ -80,14 +80,7 @@ export default function AdminLogin() {
                 required
                 autoComplete="current-password"
               />
-              <div className="flex justify-end mt-1">
-                <Link 
-                  to="/forgot-password?role=admin" 
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
+
             </div>
             <Button
               type="submit"

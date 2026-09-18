@@ -184,7 +184,8 @@ exports.login = async (req, res) => {
         role: partner.role || 'referral',
         commissionRate: partner.commissionRate,
         isApproved: partner.isApproved,
-        status: partner.status
+        status: partner.status,
+        paymentStatus: partner.paymentStatus
       }
     });
 
@@ -277,7 +278,8 @@ exports.loginWithOTP = async (req, res) => {
         role: partner.role || 'referral',
         commissionRate: partner.commissionRate,
         isApproved: partner.isApproved,
-        status: partner.status
+        status: partner.status,
+        paymentStatus: partner.paymentStatus
       }
     });
 
@@ -450,14 +452,15 @@ exports.getDashboard = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+
     res.json({
       fullName: user.fullName,
       email: user.email,
+      phone: user.phone,
+      address: user.address,
+      businessName: user.businessName,
       status: user.status,
-      
-      // 🔥 YEH LINE ADD KARO
       profileImage: user.profileImage,
-
       referralCode: user.referralCode,
       referralCount: user.referralCount,
       totalCommission: user.totalCommission,

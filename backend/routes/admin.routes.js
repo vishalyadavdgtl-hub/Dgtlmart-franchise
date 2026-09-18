@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth.middleware');
 const adminController = require('../controllers/admin.controller');
+const upload = require('../middleware/upload');
+const SystemSettings = require('../models/SystemSettings');
 
 // Admin login
 router.post('/login', adminController.login);
@@ -232,5 +234,38 @@ router.put('/leads/:leadId/status', authMiddleware, async (req, res) => {
 // System Settings
 router.get('/settings', authMiddleware, adminController.getSettings);
 router.put('/settings', authMiddleware, adminController.updateSettings);
+
+// Upload global document templates
+router.post(
+  '/settings/upload-templates',
+  authMiddleware,
+  upload.fields([
+    { name: 'ndaTemplate', maxCount: 1 },
+    { name: 'agreementTemplate', maxCount: 1 }
+  ]),
+  async (req, res) => {
+    try {
+      let settings = await SystemSettings.findOne();
+      if (!settings) {
+        settings = new SystemSettings();
+      }
+
+      if (req.files) {
+        if (req.files.ndaTemplate) {
+          settings.ndaTemplateUrl = req.files.ndaTemplate[0].location;
+        }
+        if (req.files.agreementTemplate) {
+          settings.agreementTemplateUrl = req.files.agreementTemplate[0].location;
+        }
+      }
+
+      await settings.save();
+      res.json({ success: true, settings });
+    } catch (err) {
+      console.error("Error uploading templates:", err);
+      res.status(500).json({ error: 'Failed to upload templates' });
+    }
+  }
+);
 
 module.exports = router;

@@ -7,8 +7,8 @@ export default function WaitingForApproval() {
   const [dots, setDots] = useState('');
 
   useEffect(() => {
-    // Try to get user info from partnerData
-    const data = localStorage.getItem('partnerData');
+    // Try to get user info from partnerUser (preferred) or partnerData
+    const data = localStorage.getItem('partnerUser') || localStorage.getItem('partnerData');
     if (data) setUser(JSON.parse(data));
 
     // Animated dots
@@ -18,12 +18,12 @@ export default function WaitingForApproval() {
     return () => clearInterval(interval);
   }, []);
 
-  // const handleLogout = () => {
-  //   localStorage.removeItem('partnerData');
-  //   localStorage.removeItem('partnerToken');
-  //   localStorage.removeItem('partnerUser');
-  //   navigate('/partner-login');
-  // };
+  const handleLogout = () => {
+    localStorage.removeItem('partnerData');
+    localStorage.removeItem('partnerToken');
+    localStorage.removeItem('partnerUser');
+    navigate('/partner-login');
+  };
 
   const steps = [
     { label: 'Registration Submitted', status: 'done', icon: '✓' },
@@ -40,7 +40,7 @@ export default function WaitingForApproval() {
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-xl">
         {/* Card */}
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl text-center">
           {/* Animated Clock Icon */}
@@ -53,15 +53,42 @@ export default function WaitingForApproval() {
             </div>
           </div>
 
-          <h1 className="text-2xl font-bold text-white mb-2">Under Review{dots}</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            {user && user.paymentStatus !== 'paid' 
+              ? 'Action Required' 
+              : `Under Review${dots}`}
+          </h1>
           {user && (
             <p className="text-slate-300 text-sm mb-1">
-              Hello, <span className="font-semibold text-white">{user.fullName}</span>
+              Hello, <span className="font-semibold text-white">{user.fullName || user.name}</span>
             </p>
           )}
           <p className="text-slate-400 text-sm mb-8">
-            Your account is currently being reviewed by our admin team. You'll receive an email notification once approved.
+            {user && user.paymentStatus !== 'paid'
+              ? "Your registration is incomplete. Please complete your application to proceed."
+              : "Your account is currently being reviewed by our admin team. You'll receive an email notification once approved."}
           </p>
+
+          {user && user.paymentStatus !== 'paid' && (
+            <button
+              onClick={() => {
+                localStorage.removeItem('isModalOpen');
+                localStorage.removeItem('isApplicationSubmitted');
+                localStorage.removeItem('isDocumentSection');
+                localStorage.removeItem('selectedProposal');
+                localStorage.removeItem('franchiseFormData');
+                navigate('/referral-success', { state: { partner: user } });
+              }}
+              className="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 px-4 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-lg animate-pulse mb-8"
+            >
+              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Complete Application
+            </button>
+          )}
+
+
 
           {/* Progress Steps */}
           <div className="space-y-3 mb-8 text-left">
@@ -99,14 +126,20 @@ export default function WaitingForApproval() {
           </div>
 
           {/* Actions */}
-         <div className="flex flex-col gap-3">
-  <button
-    onClick={() => navigate('/')}
-    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition text-sm"
-  >
-    🏠 Back to Home Page
-  </button>
-</div>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition text-sm"
+            >
+              🏠 Back to Home Page
+            </button>
+            <button
+              onClick={handleLogout}
+              className="w-full bg-white/10 hover:bg-white/20 text-slate-300 font-semibold py-3 rounded-xl transition text-sm"
+            >
+              🚪 Logout
+            </button>
+          </div>
         </div>
 
         {/* Footer note */}

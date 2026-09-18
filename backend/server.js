@@ -76,8 +76,8 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  console.error("GLOBAL ERROR CAUGHT:", err);
+  res.status(500).json({ error: 'CRITICAL_ERROR', details: String(err), stack: err.stack });
 });
 
 // MongoDB connection

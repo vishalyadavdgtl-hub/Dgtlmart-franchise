@@ -48,7 +48,7 @@ router.post('/client/login', loginLimiter, franchiseController.loginClient);
 router.post('/client/send-login-otp', otpLimiter, franchiseController.sendLoginOTP);
 
 // Client Login with OTP
-router.post('/client/login-with-otp', franchiseController.loginClientWithOTP);
+router.post('/client/login-with-otp', loginLimiter, franchiseController.loginClientWithOTP);
 
 // Create franchise buyer order (Authenticated)
 router.post('/buy-package', authMiddleware, franchiseController.buyPackage);

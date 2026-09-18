@@ -569,7 +569,7 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
             Your partner account is{" "}
             <span className="text-green-600 font-semibold">Active & Approved</span> ·
             <span className={`ml-2 font-bold bg-gradient-to-r ${roleBadge.color} bg-clip-text text-transparent`}>
-              {roleBadge.label} · {isActuallyReferral ? 20 : mergedStats?.commissionRate}% Commission
+              {roleBadge.label} · {mergedStats?.commissionRate || 10}% Commission
             </span>
           </p>
         </div>
@@ -698,10 +698,10 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
                 ? [
                   {
                     label: "Commission Rate",
-                    value: `${isActuallyReferral ? 20 : mergedStats?.commissionRate}%`,
+                    value: `${mergedStats?.commissionRate || 10}%`,
                     // rawValue: mergedStats?.commissionRate,
                     editKey: "commissionRate",
-                    note: mergedStats?.franchiseType === "sathi" ? "Sathi Premium Rate" : "Dost Rate",
+                    note: isActuallyReferral ? "Referral Rate" : mergedStats?.franchiseType === "sathi" ? "Sathi Premium Rate" : "Dost Rate",
                     color: "from-purple-500 to-indigo-600",
                     icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
                     editable: true,
@@ -1102,7 +1102,7 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
             <div className="bg-white rounded-2xl border shadow-sm p-6">
               <h2 className="text-xl font-bold text-slate-800 mb-2">Your Referral Info</h2>
               <p className="text-slate-500 text-sm mb-4">
-                Share your referral link or code to earn <strong>{isActuallyReferral ? 20 : mergedStats?.commissionRate}%</strong> commission on successful referrals.
+                Share your referral link or code to earn <strong>{mergedStats?.commissionRate || 10}%</strong> commission on successful referrals.
               </p>
               <div className="flex flex-col gap-4">
                 {/* Referral Link */}
@@ -1302,7 +1302,12 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
               <div className="bg-white rounded-2xl border shadow-sm p-6">
                 <h3 className="font-bold text-slate-800 mb-3">📅 Request a Meeting</h3>
                 <p className="text-slate-500 text-sm mb-4">Schedule a call with our franchise support team.</p>
-                <a href={`mailto:support@dgtlmart.com?subject=Meeting Request - ${mergedStats?.fullName}`} className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm">
+                <a 
+                  href={systemSettings?.meetingLink || systemSettings?.settings?.meetingLink || `mailto:support@dgtlmart.com?subject=Meeting Request - ${mergedStats?.fullName}`} 
+                  target={systemSettings?.meetingLink || systemSettings?.settings?.meetingLink ? "_blank" : "_self"}
+                  rel={systemSettings?.meetingLink || systemSettings?.settings?.meetingLink ? "noopener noreferrer" : ""}
+                  className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm"
+                >
                   📧 Request Meeting
                 </a>
               </div>

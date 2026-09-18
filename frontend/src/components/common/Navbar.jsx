@@ -200,40 +200,30 @@ export default function Navbar({ isAdmin = false, onLogout }) {
                   <Link to="/contact" className={getNavLinkClass("/contact")}>
                     Contact Us
                   </Link>
-                  <Link
-                    to="/partner-login"
-                    className={`px-4 py-2 text-sm font-medium transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md rounded-lg ${
-                      isActive("/partner-login")
-                        ? "bg-blue-700 text-white shadow-md"
-                        : "bg-green-600 text-white hover:bg-green-700"
-                    }`}
-                  >
-                    Partner Login
-                  </Link>
                   {!isPartnerLoggedIn && (
                     <>
-                      {/* <Link
-                        to="/packages"
+                      <Link
+                        to="/partner-login"
                         className={`px-4 py-2 text-sm font-medium transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md rounded-lg ${
-                          isActive("/referral-partner")
+                          isActive("/partner-login")
                             ? "bg-blue-700 text-white shadow-md"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
+                            : "bg-green-600 text-white hover:bg-green-700"
                         }`}
                       >
+                        Partner Login
+                      </Link>
+                      <Link
+                        to="/referral-partner"
+                         className={`px-5 py-2.5 text-sm font-medium rounded-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-blue-500/25 ${
+                      isActive("/referral-partner")
+                        ? "text-white bg-gradient-to-r from-blue-700 to-purple-700 shadow-lg ring-2 ring-blue-500 ring-offset-2"
+                        : "text-white bg-gradient-to-r from-blue-600 to-purple-600"
+                    }`}
+                      >
                         Become a Partner
-                      </Link> */}
+                      </Link>
                     </>
                   )}
-                  <Link
-                    to="/referral-partner"
-                     className={`px-5 py-2.5 text-sm font-medium rounded-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-blue-500/25 ${
-                  isActive("/referral-partner")
-                    ? "text-white bg-gradient-to-r from-blue-700 to-purple-700 shadow-lg ring-2 ring-blue-500 ring-offset-2"
-                    : "text-white bg-gradient-to-r from-blue-600 to-purple-600"
-                }`}
-                  >
-                    Become a Partner
-                  </Link>
                   <Link
                     to="/buy-franchise"
                     className={`px-5 py-2.5 text-sm font-medium rounded-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-blue-500/25 ${
@@ -413,6 +403,13 @@ export default function Navbar({ isAdmin = false, onLogout }) {
                       >
                         Partner Login
                       </Link>
+                      <Link
+                        to="/referral-partner"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="block px-4 py-3 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg transition-all rounded-xl text-center active:scale-95"
+                      >
+                        Become a Partner
+                      </Link>
                     </>
                   ) : (
                     <div className="bg-blue-50/50 rounded-xl p-3 border border-blue-100">
@@ -433,14 +430,6 @@ export default function Navbar({ isAdmin = false, onLogout }) {
                     </div>
                   )}
 
-                  <Link
-                    to="/referral-partner"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="block px-4 py-3 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg transition-all rounded-xl text-center active:scale-95"
-                  >
-                    Become a Partner
-                  </Link>
-                  
                   <Link
                     to="/buy-franchise"
                     onClick={() => setIsMobileMenuOpen(false)}

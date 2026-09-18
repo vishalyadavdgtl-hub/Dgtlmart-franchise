@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { explorePackagesAPI } from '../../utils/api';
+import { explorePackagesAPI, franchiseAPI } from '../../utils/api';
+import { displayRazorpay } from '../../utils/razorpay';
 import { useToast } from '../../components/common/Toast';
 
 export default function PackageSelection() {
@@ -19,16 +20,6 @@ export default function PackageSelection() {
   const referralCode = searchParams.get('ref');
 
   useEffect(() => {
-    // Check Auth
-    const partnerToken = localStorage.getItem('partnerToken');
-    
-    if (!partnerToken) {
-        // Redirect to Partner Login, preserving current location
-        showToast('Please login as a partner to view packages', 'info');
-        navigate('/partner-login', { state: { from: location } });
-        return;
-    }
-
     fetchPackages();
     window.scrollTo(0, 0);
   }, []);
@@ -61,7 +52,7 @@ const fetchPackages = async () => {
   }
 };
 
-  const handleSelectPackage = (category, pkg) => {
+  const handleSelectPackage = async (category, pkg) => {
     const packageData = {
       category,
       packageName: pkg.Name,
@@ -69,9 +60,50 @@ const fetchPackages = async () => {
       id: pkg.id
     };
     
-    navigate(`/franchise-register/${pkg.id}`, {
-      state: { package: packageData, referralCode }
-    });
+    const partnerToken = localStorage.getItem('partnerToken');
+
+    if (partnerToken) {
+      try {
+        setLoading(true);
+        const response = await franchiseAPI.buyPackage({
+          selectedPackage: packageData,
+          couponCode: referralCode
+        });
+
+        await displayRazorpay(
+          {
+            id: response.data.order.id,
+            amount: response.data.order.amount,
+            currency: response.data.order.currency,
+          },
+          async (paymentResponse) => {
+            try {
+              await franchiseAPI.verifyPayment({
+                razorpayOrderId: paymentResponse.razorpay_order_id,
+                razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                razorpaySignature: paymentResponse.razorpay_signature,
+                buyerId: response.data.buyerId,
+              });
+
+              showToast("Package purchased successfully! 🎉", "success");
+              navigate('/dashboard');
+            } catch (err) {
+              console.error(err);
+              showToast("Payment verification failed", "error");
+            }
+          }
+        );
+      } catch (err) {
+        console.error(err);
+        showToast(err.response?.data?.error || "Error initializing checkout", "error");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      navigate(`/franchise-register/${pkg.id}`, {
+        state: { package: packageData, referralCode }
+      });
+    }
   };
 
   if (loading) {

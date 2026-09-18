@@ -1,0 +1,69 @@
+Created At: 2026-09-17T18:44:27+05:30
+Completed At: 2026-09-17T18:44:27+05:30
+File Path: `file:///d:/Dgtlmart-franchise/frontend/src/pages/Referral/ReferralSuccess.jsx`
+Total Lines: 705
+Total Bytes: 33548
+Showing lines 190 to 250
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+190:             <Link to="/referral-partner">
+191:               <Button variant="primary">
+192:                 Go to Registration
+193:               </Button>
+194:             </Link>
+195:           </div>
+196:         </div>
+197:       </div>
+198:     );
+199:   }
+200: 
+201:   if (isModalOpen) {
+202:                         "Submit Final Application"
+203:                       )}
+204:                     </Button>
+205:                   </div>
+206:                 </form>
+207:               </div>
+208:             </div>
+209:           </div>
+210:         </div>
+211:       );
+212:     }
+213: 
+214:     if (isApplicationSubmitted) {
+215:       return (
+216:         <div className="min-h-screen bg-gray-50 flex flex-col">
+217:           <Navbar />
+218:           <div className="flex-1 py-12 px-4 sm:px-6">
+219:             <div className="max-w-6xl mx-auto">
+220:               <div className="text-center mb-12 animate-scale-in">
+221:                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Choose Your Partnership Proposal</h2>
+222:                 <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+223:                   Your application details have been received. Please select the partnership model that best fits your goals to complete your registration.
+224:                 </p>
+225:               </div>
+226: 
+227:               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+228:                 {/* Referral Partner Card */}
+229:                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-2xl animate-scale-in" style={{ animationDelay: '0.1s' }}>
+230:                   <div className="p-8 border-b border-gray-100 bg-gradient-to-br from-blue-50 to-white">
+231:                     <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+232:                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+233:                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+234:                       </svg>
+235:                     </div>
+236:                     <h3 className="text-2xl font-bold text-gray-900 mb-2">Referral Partner</h3>
+237:                     <p className="text-gray-500 text-sm">Perfect for beginners wanting to earn by referring clients.</p>
+238:                     <div className="mt-6 flex items-baseline text-4xl font-extrabold text-blue-600">
+239:                       Free
+240:                       <span className="ml-2 text-xl font-medium text-gray-500">to join</span>
+241:                     </div>
+242:                   </div>
+243:                   <div className="p-8 flex-1 flex flex-col">
+244:                     <ul className="space-y-4 mb-8 flex-1">
+245:                       <li className="flex items-start">
+246:                         <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+247:                         <span className="text-gray-600 font-medium">Earn a flat 10% commission on successful client referrals</span>
+248:                       </li>
+249:                       <li className="flex items-start">
+250:                         <svg className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

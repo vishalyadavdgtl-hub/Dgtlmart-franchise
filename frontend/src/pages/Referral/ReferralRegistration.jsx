@@ -16,20 +16,47 @@ export default function ReferralRegistration() {
   const [showAgreement, setShowAgreement] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  const [formData, setFormData] = useState({
-  fullName: '',
-  email: '',
-  password: '',
-  phone: '',
-  address: '',
-  partnerType: 'referral',
-  franchiseType: '',
-  agreementAccepted: false,
-  otp: '',
-});
+  const [formData, setFormData] = useState(() => {
+    const saved = sessionStorage.getItem('referralFormData');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return { ...parsed, password: '', otp: '' };
+      } catch (e) {
+        // ignore
+      }
+    }
+    return {
+      fullName: '',
+      email: '',
+      password: '',
+      phone: '',
+      address: '',
+      partnerType: 'referral',
+      franchiseType: '',
+      agreementAccepted: false,
+      otp: '',
+    };
+  });
+
+  useEffect(() => {
+    const { password, otp, ...safeData } = formData;
+    sessionStorage.setItem('referralFormData', JSON.stringify(safeData));
+  }, [formData]);
 
 const [otpSent, setOtpSent] = useState(false);
 const [sendingOtp, setSendingOtp] = useState(false);
+const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    let timerId;
+    if (resendTimer > 0) {
+      timerId = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timerId);
+  }, [resendTimer]);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -103,6 +130,9 @@ const [sendingOtp, setSendingOtp] = useState(false);
       console.debug('[referral] register payload:', { ...formData, password: '••••••' });
       const response = await referralAPI.register(formData);
       
+      // Clear saved data on successful registration
+      sessionStorage.removeItem('referralFormData');
+      
       // Navigate to success page with data
       navigate('/referral-success', {
         state: {
@@ -124,6 +154,7 @@ const [sendingOtp, setSendingOtp] = useState(false);
     try {
       await referralAPI.sendOTP({ email: formData.email, phone: formData.phone });
       setOtpSent(true);
+      setResendTimer(60); // Start 60 second timer
       showToast('OTP sent successfully to your mobile number!', 'success');
     } catch (error) {
       console.error('OTP send error:', error);
@@ -402,7 +433,17 @@ const [sendingOtp, setSendingOtp] = useState(false);
                       type="text"
                       maxLength={6}
                     />
-                    <p className="text-xs text-gray-500 mt-2 text-center">OTP sent to {formData.phone}</p>
+                    <div className="flex justify-between items-center mt-2 px-1">
+                      <p className="text-xs text-gray-500">OTP sent to {formData.phone}</p>
+                      <button
+                        type="button"
+                        disabled={resendTimer > 0 || sendingOtp}
+                        onClick={handleSendOTP}
+                        className={`text-xs font-bold transition-colors ${resendTimer > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-blue-600 hover:text-blue-800'}`}
+                      >
+                        {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+                      </button>
+                    </div>
                   </div>
                 )}
 

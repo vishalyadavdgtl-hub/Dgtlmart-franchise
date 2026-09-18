@@ -126,6 +126,9 @@ export const adminAPI = {
   // System Settings
   getSettings: () => api.get('/admin/settings'),
   updateSettings: (data) => api.put('/admin/settings', data),
+  uploadTemplates: (data) => api.post('/admin/settings/upload-templates', data, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
 // Explore Package APIs (Dynamic Services)

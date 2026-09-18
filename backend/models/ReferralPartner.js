@@ -130,6 +130,22 @@ const referralPartnerSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  profession: {
+    type: String,
+    default: null
+  },
+  experience: {
+    type: String,
+    default: null
+  },
+  linkedinUrl: {
+    type: String,
+    default: null
+  },
+  preferredCategory: {
+    type: String,
+    default: null
+  },
   notes: {
     type: String,
     default: ''
@@ -164,6 +180,9 @@ const referralPartnerSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  kycDocumentUrl: { type: String, default: null },
+  ndaDocumentUrl: { type: String, default: null },
+  signedAgreementUrl: { type: String, default: null },
   customBrandingKitUrl: { type: String, default: null },
   customProposalsUrl: { type: String, default: null },
   customDriveUrl: { type: String, default: null },

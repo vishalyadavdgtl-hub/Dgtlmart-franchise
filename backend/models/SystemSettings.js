@@ -16,6 +16,18 @@ const systemSettingsSchema = new mongoose.Schema({
   crmUrl: {
     type: String,
     default: 'https://crm.zoho.com'
+  },
+  ndaTemplateUrl: {
+    type: String,
+    default: null
+  },
+  agreementTemplateUrl: {
+    type: String,
+    default: null
+  },
+  meetingLink: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true

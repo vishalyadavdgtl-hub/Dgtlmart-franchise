@@ -10,6 +10,9 @@ import PackageSelection from "./pages/Franchise/PackageSelection";
 import FranchiseRegistration from "./pages/Franchise/FranchiseRegistration";
 import FranchiseSuccess from "./pages/Franchise/FranchiseSuccess";
 import WaitingForApproval from "./pages/Franchise/WaitingForApproval";
+import ScheduleMeeting from "./pages/Franchise/ScheduleMeeting";
+import PaymentPage from "./pages/Franchise/PaymentPage";
+import OnboardingSuccess from "./pages/Franchise/OnboardingSuccess";
 import OfferLetter from "./pages/Franchise/OfferLetter";
 import Certificate from "./pages/Franchise/Certificate";
 import Contact from "./pages/Contact";
@@ -39,6 +42,7 @@ import PartnerDashboardRedirect from "./pages/Admin/Partnerdashboardredirect";
 
 import "./App.css";
 import FranchiseManagement from "./pages/Admin/FranchiseManagement";
+import ApplicationsManagement from "./pages/Admin/ApplicationsManagement";
 
 function App() {
   return (
@@ -53,6 +57,9 @@ function App() {
           <Route path="/referral-partner" element={<ReferralRegistration />} />
           <Route path="/referral-partner/:id" element={<ReferralRegistration />} />
           <Route path="/referral-success" element={<ReferralSuccess />} />
+          <Route path="/schedule-meeting" element={<ScheduleMeeting />} />
+          <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/onboarding-success" element={<OnboardingSuccess />} />
           <Route path="/partner-login" element={<ReferralLogin />} />
           <Route path="/waiting-for-approval" element={<WaitingForApproval />} />
 
@@ -77,6 +84,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/manage-dgtl" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/franchise-applications" element={<ProtectedRoute><ApplicationsManagement /></ProtectedRoute>} />
           <Route path="/admin/referrals" element={<ProtectedRoute><ReferralManagement /></ProtectedRoute>} />
           <Route path="/admin/franchise" element={<ProtectedRoute><FranchiseManagement /></ProtectedRoute>} />
           <Route path="/admin/buyers" element={<Navigate to="/admin/referrals" />} />

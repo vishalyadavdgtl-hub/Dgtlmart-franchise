@@ -11,13 +11,13 @@ export default function ReferralLogin() {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  
+
   const [loginRole, setLoginRole] = useState('referral');
   const [loginMethod, setLoginMethod] = useState('email');
   const [otpSent, setOtpSent] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [resendTimer, setResendTimer] = useState(0); // countdown in seconds
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -69,13 +69,13 @@ export default function ReferralLogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (loginMethod === 'phone' && !otpSent) {
       return handleSendOTP();
     }
 
     setLoading(true);
-    
+
     try {
       let response;
       if (loginMethod === 'email') {
@@ -94,19 +94,19 @@ export default function ReferralLogin() {
         }
         response = await referralAPI.loginWithOTP({ phone: formData.phone, otp: formData.otp, loginRole });
       }
-      
+
       const partnerData = {
         ...response.data.partner,
         token: response.data.token
       };
-      localStorage.setItem("token", response.data.token); 
+      localStorage.setItem("token", response.data.token);
 
       localStorage.setItem('partnerData', JSON.stringify(partnerData));
       localStorage.setItem('partnerToken', response.data.token);
       localStorage.setItem('partnerUser', JSON.stringify(response.data.partner));
-      
+
       showToast('Login successful!', 'success');
-      
+
       setTimeout(() => {
         const partner = response.data.partner;
         if (partner.status !== "ACTIVE") {
@@ -118,7 +118,7 @@ export default function ReferralLogin() {
         const from = location.state?.from?.pathname || destination;
         navigate(from, { replace: true });
       }, 500);
-      
+
     } catch (error) {
       console.error('Login error:', error);
       const msg = error.response?.data?.error || 'Login failed. Please check your credentials.';
@@ -127,7 +127,33 @@ export default function ReferralLogin() {
         if (match && match[1]) {
           const serverRole = match[1].toLowerCase();
           setLoginRole(serverRole);
-          showToast(`${msg} (Login role switched)`, 'info');
+          // Auto-retry with the correct role - no need to click twice
+          try {
+            let retryResponse;
+            if (loginMethod === 'email') {
+              retryResponse = await referralAPI.login({ email: formData.email, password: formData.password, loginRole: serverRole });
+            } else {
+              retryResponse = await referralAPI.loginWithOTP({ phone: formData.phone, otp: formData.otp, loginRole: serverRole });
+            }
+            const retryPartnerData = { ...retryResponse.data.partner, token: retryResponse.data.token };
+            localStorage.setItem("token", retryResponse.data.token);
+            localStorage.setItem('partnerData', JSON.stringify(retryPartnerData));
+            localStorage.setItem('partnerToken', retryResponse.data.token);
+            localStorage.setItem('partnerUser', JSON.stringify(retryResponse.data.partner));
+            showToast('Login successful!', 'success');
+            setTimeout(() => {
+              const partner = retryResponse.data.partner;
+              if (partner.status !== "ACTIVE") {
+                navigate('/waiting-for-approval', { replace: true });
+                return;
+              }
+              const destination = '/dashboard';
+              const from = location.state?.from?.pathname || destination;
+              navigate(from, { replace: true });
+            }, 500);
+          } catch (retryErr) {
+            showToast(msg, 'error');
+          }
         } else {
           showToast(msg, 'error');
         }
@@ -142,31 +168,31 @@ export default function ReferralLogin() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
-      
+
       <main className="flex-1 flex flex-col lg:flex-row relative">
         {/* Left Side - Background Image & Brand Messaging */}
         <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden">
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms]"
-            style={{ 
+            style={{
               backgroundImage: `url('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1600')`,
               transform: isLoaded ? 'scale(1)' : 'scale(1.1)'
             }}
           ></div>
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/93 via-slate-900/90 to-blue-800/88"></div>
-          
+
           <div className="relative z-10 w-full h-full flex flex-col justify-center px-12 xl:px-20">
             <div className={`transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white text-sm font-semibold mb-8">
                 <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
                 Welcome Back, Partner
               </div>
-              
+
               <h1 className="text-4xl xl:text-6xl font-bold text-white mb-6 leading-tight">
                 Access Your <br />
                 <span className="text-blue-400">Partner Dashboard</span>
               </h1>
-              
+
               <p className="text-lg text-blue-100/80 leading-relaxed max-w-xl">
                 Track your referrals, monitor commissions, and manage your partnership with DGTLmart all in one place.
               </p>
@@ -198,18 +224,17 @@ export default function ReferralLogin() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Role Selector */}
                 <div>
-                   <label className="block text-sm font-semibold text-gray-700 mb-2">Login As</label>
-                   <div className="bg-gray-100 p-1 rounded-xl flex">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Login As</label>
+                  <div className="bg-gray-100 p-1 rounded-xl flex">
                     <button
-                        type="button"
-                        onClick={() => setLoginRole('referral')}
-                        className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
-                        loginRole === 'referral'
-                            ? 'bg-white text-blue-600 shadow-sm border border-gray-200'
-                            : 'text-gray-500 hover:text-gray-700'
+                      type="button"
+                      onClick={() => setLoginRole('referral')}
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${loginRole === 'referral'
+                          ? 'bg-white text-blue-600 shadow-sm border border-gray-200'
+                          : 'text-gray-500 hover:text-gray-700'
                         }`}
                     >
-                        Referral Partner
+                      Referral Partner
                     </button>
                     {/* <button
                         type="button"
@@ -222,8 +247,8 @@ export default function ReferralLogin() {
                     >
                         Franchise Partner
                     </button> */}
-                   </div>
-                   {/* <p className="text-xs text-gray-500 mt-2 text-center">
+                  </div>
+                  {/* <p className="text-xs text-gray-500 mt-2 text-center">
                     {loginRole === 'referral' 
                         ? 'For partners earning 10% commission on referrals.' 
                         : 'For territory partners earning 25% commission.'}
@@ -235,18 +260,16 @@ export default function ReferralLogin() {
                   <button
                     type="button"
                     onClick={() => { setLoginMethod('email'); setOtpSent(false); }}
-                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-                      loginMethod === 'email' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${loginMethod === 'email' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                      }`}
                   >
                     Email Login
                   </button>
                   <button
                     type="button"
                     onClick={() => { setLoginMethod('phone'); setOtpSent(false); }}
-                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-                      loginMethod === 'phone' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${loginMethod === 'phone' ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                      }`}
                   >
                     Mobile OTP
                   </button>
@@ -282,8 +305,8 @@ export default function ReferralLogin() {
                         className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                       />
                       <div className="flex justify-end mt-2">
-                        <Link 
-                          to={`/forgot-password?role=${loginRole}`} 
+                        <Link
+                          to={`/forgot-password?role=${loginRole}`}
                           className="text-xs font-semibold text-blue-600 hover:text-blue-700"
                         >
                           Forgot Password?

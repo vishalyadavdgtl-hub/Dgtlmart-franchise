@@ -635,7 +635,7 @@ exports.getSettings = async (req, res) => {
 exports.updateSettings = async (req, res) => {
   try {
     const SystemSettings = require('../models/SystemSettings');
-    const { brandingKitUrl, proposalsUrl, driveUrl, crmUrl } = req.body;
+    const { brandingKitUrl, proposalsUrl, driveUrl, crmUrl, meetingLink } = req.body;
     
     let settings = await SystemSettings.findOne();
     if (!settings) {
@@ -646,6 +646,7 @@ exports.updateSettings = async (req, res) => {
     if (proposalsUrl !== undefined) settings.proposalsUrl = proposalsUrl;
     if (driveUrl !== undefined) settings.driveUrl = driveUrl;
     if (crmUrl !== undefined) settings.crmUrl = crmUrl;
+    if (meetingLink !== undefined) settings.meetingLink = meetingLink;
     
     await settings.save();
     res.json({ message: 'Settings updated successfully', settings });
