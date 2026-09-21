@@ -121,11 +121,10 @@ export default function Navbar({ isAdmin = false, onLogout }) {
   const isActive = (path) => location.pathname === path;
 
   const getNavLinkClass = (path) => {
-    return `px-4 py-2 text-sm font-medium transition-colors rounded-lg ${
-      isActive(path)
+    return `px-4 py-2 text-sm font-medium transition-colors rounded-lg ${isActive(path)
         ? "text-blue-600 bg-blue-50 font-bold"
         : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-    }`;
+      }`;
   };
 
   const getPartnerEmail = () => {
@@ -140,11 +139,10 @@ export default function Navbar({ isAdmin = false, onLogout }) {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
             ? "bg-white/95 backdrop-blur-md shadow-lg py-3"
             : "bg-white shadow-sm py-4"
-        }`}
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
@@ -204,21 +202,19 @@ export default function Navbar({ isAdmin = false, onLogout }) {
                     <>
                       <Link
                         to="/partner-login"
-                        className={`px-4 py-2 text-sm font-medium transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md rounded-lg ${
-                          isActive("/partner-login")
+                        className={`px-4 py-2 text-sm font-medium transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md rounded-lg ${isActive("/partner-login")
                             ? "bg-blue-700 text-white shadow-md"
                             : "bg-green-600 text-white hover:bg-green-700"
-                        }`}
+                          }`}
                       >
                         Partner Login
                       </Link>
                       <Link
                         to="/referral-partner"
-                         className={`px-5 py-2.5 text-sm font-medium rounded-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-blue-500/25 ${
-                      isActive("/referral-partner")
-                        ? "text-white bg-gradient-to-r from-blue-700 to-purple-700 shadow-lg ring-2 ring-blue-500 ring-offset-2"
-                        : "text-white bg-gradient-to-r from-blue-600 to-purple-600"
-                    }`}
+                        className={`px-5 py-2.5 text-sm font-medium rounded-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-blue-500/25 ${isActive("/referral-partner")
+                            ? "text-white bg-gradient-to-r from-blue-700 to-purple-700 shadow-lg ring-2 ring-blue-500 ring-offset-2"
+                            : "text-white bg-gradient-to-r from-blue-600 to-purple-600"
+                          }`}
                       >
                         Become a Partner
                       </Link>
@@ -226,11 +222,10 @@ export default function Navbar({ isAdmin = false, onLogout }) {
                   )}
                   <Link
                     to="/buy-franchise"
-                    className={`px-5 py-2.5 text-sm font-medium rounded-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-blue-500/25 ${
-                      isActive("/buy-franchise")
+                    className={`px-5 py-2.5 text-sm font-medium rounded-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-blue-500/25 ${isActive("/buy-franchise")
                         ? "text-white bg-gradient-to-r from-blue-700 to-purple-700 shadow-lg ring-2 ring-blue-500 ring-offset-2"
                         : "text-white bg-gradient-to-r from-blue-600 to-purple-600"
-                    }`}
+                      }`}
                   >
                     Explore Packages
                   </Link>
@@ -360,11 +355,10 @@ export default function Navbar({ isAdmin = false, onLogout }) {
 
           {/* Mobile Menu */}
           <div
-            className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${
-              isMobileMenuOpen
+            className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${isMobileMenuOpen
                 ? "max-h-[80vh] opacity-100 mt-4 pb-4"
                 : "max-h-0 opacity-0"
-            }`}
+              }`}
           >
             <div className="bg-white rounded-2xl p-4 space-y-3 border border-gray-100 shadow-xl mx-1">
               {!isAdmin ? (
@@ -372,26 +366,24 @@ export default function Navbar({ isAdmin = false, onLogout }) {
                   <Link
                     to="/"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
-                      isActive("/") 
-                        ? "bg-blue-50 text-blue-600" 
+                    className={`block px-4 py-3 text-sm font-semibold rounded-xl transition-all ${isActive("/")
+                        ? "bg-blue-50 text-blue-600"
                         : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     Home
                   </Link>
                   <Link
                     to="/contact"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block px-4 py-3 text-sm font-semibold rounded-xl transition-all ${
-                      isActive("/contact") 
-                        ? "bg-blue-50 text-blue-600" 
+                    className={`block px-4 py-3 text-sm font-semibold rounded-xl transition-all ${isActive("/contact")
+                        ? "bg-blue-50 text-blue-600"
                         : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     Contact Us
                   </Link>
-                  
+
                   <div className="h-px bg-gray-100 my-2"></div>
 
                   {!isPartnerLoggedIn ? (

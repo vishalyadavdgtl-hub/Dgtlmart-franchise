@@ -22,7 +22,7 @@ async function fixUser() {
       price: 49999, // Adjust if you know the exact price
     };
     user.paymentAmount = 49999;
-    user.paymentStatus = 'pending';
+    user.paymentStatus = 'paid';
 
     await user.save();
     console.log('User package updated successfully');

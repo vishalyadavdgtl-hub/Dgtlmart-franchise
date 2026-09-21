@@ -210,6 +210,10 @@ export default function ReferralSuccess() {
       submitData.append('franchiseType', selectedProposal.toLowerCase());
       submitData.append('commissionRate', selectedProposal === 'Referral' ? 10 : 25);
       
+      if (partner?.id || partner?._id) {
+        submitData.append('userId', partner.id || partner._id);
+      }
+      
       submitData.append('kycDocument', documents.kycDocument);
       submitData.append('ndaDocument', documents.ndaDocument);
       submitData.append('signedAgreement', documents.signedAgreement);

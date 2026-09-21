@@ -85,7 +85,6 @@ router.post(
 // ✅ Upload Documents for Franchise Application
 router.post(
   '/upload-documents',
-  authMiddleware,
   (req, res, next) => {
     const multerUpload = upload.fields([
       { name: 'kycDocument', maxCount: 1 },
@@ -103,7 +102,10 @@ router.post(
   },
   async (req, res) => {
     try {
-      const user = await ReferralPartner.findById(req.user.id);
+      const userId = req.body.userId;
+      if (!userId) return res.status(400).json({ message: "User ID is required" });
+      
+      const user = await ReferralPartner.findById(userId);
       if (!user) return res.status(404).json({ message: "User not found" });
 
       // Update text fields from formData
