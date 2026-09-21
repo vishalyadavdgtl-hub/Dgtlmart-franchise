@@ -764,7 +764,7 @@ export default function ReferralSuccess() {
             </p>
             <Button 
               variant="primary" 
-              className="py-2.5 px-8 shadow-md"
+              className="py-3 px-10 text-lg font-bold shadow-lg md:py-4 md:px-12 md:text-xl w-full sm:w-auto"
               onClick={async () => {
                 try {
                   const res = await api.get('/referral/dashboard');

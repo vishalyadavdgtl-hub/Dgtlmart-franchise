@@ -627,14 +627,15 @@ exports.getSettings = async (req, res) => {
     }
     
     // If user is authenticated (Admin or logged-in Partner via proper middleware), return full settings
-    if (req.user) {
+    if (req.user || req.admin) {
       return res.json(settings);
     }
     
-    // Otherwise, return only public templates
+    // Otherwise, return only public templates and meeting link
     res.json({
       ndaTemplateUrl: settings.ndaTemplateUrl,
-      agreementTemplateUrl: settings.agreementTemplateUrl
+      agreementTemplateUrl: settings.agreementTemplateUrl,
+      meetingLink: settings.meetingLink
     });
   } catch (error) {
     console.error('Error fetching settings:', error);
