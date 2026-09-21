@@ -91,7 +91,8 @@ export default function PaymentPage() {
       const orderRes = await api.post('/referral/create-payment-order', {
         amount: pkg.price,
         franchiseType: franchiseType.toLowerCase(),
-        pkgName: pkg.name
+        pkgName: pkg.name,
+        userId: partnerInfo?.id || partnerInfo?._id
       });
 
       const { orderId, amount, currency, keyId } = orderRes.data;
@@ -117,6 +118,7 @@ export default function PaymentPage() {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
+              userId: partnerInfo?.id || partnerInfo?._id
             });
 
             if (verifyRes.data.success) {

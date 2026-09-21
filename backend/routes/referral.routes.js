@@ -167,7 +167,7 @@ router.get('/certificate/:id', authMiddleware, async (req, res) => {
 router.get('/stats/:code', referralController.getStats);
 
 // ✅ Razorpay - Create Payment Order
-router.post('/create-payment-order', authMiddleware, async (req, res) => {
+router.post('/create-payment-order', async (req, res) => {
   try {
     const Razorpay = require('razorpay');
     const razorpay = new Razorpay({
@@ -175,7 +175,12 @@ router.post('/create-payment-order', authMiddleware, async (req, res) => {
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
-    const { amount, franchiseType, pkgName } = req.body;
+    const { amount, franchiseType, pkgName, userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+    
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: 'Invalid amount' });
     }
@@ -183,9 +188,9 @@ router.post('/create-payment-order', authMiddleware, async (req, res) => {
     const options = {
       amount: Math.round(amount * 100), // paise mein
       currency: 'INR',
-      receipt: `franchise_${req.user.id}_${Date.now()}`,
+      receipt: `franchise_${userId}_${Date.now()}`,
       notes: {
-        partnerId: req.user.id,
+        partnerId: userId,
         franchiseType: franchiseType || 'referral',
       }
     };
@@ -205,7 +210,7 @@ router.post('/create-payment-order', authMiddleware, async (req, res) => {
       };
     }
 
-    await ReferralPartner.findByIdAndUpdate(req.user.id, updateData);
+    await ReferralPartner.findByIdAndUpdate(userId, updateData);
 
     res.json({
       orderId: order.id,
@@ -220,10 +225,14 @@ router.post('/create-payment-order', authMiddleware, async (req, res) => {
 });
 
 // ✅ Razorpay - Verify Payment & Activate Franchise
-router.post('/verify-payment', authMiddleware, async (req, res) => {
+router.post('/verify-payment', async (req, res) => {
   try {
     const crypto = require('crypto');
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
 
     // Signature verify karo
     const body = razorpay_order_id + '|' + razorpay_payment_id;
@@ -238,7 +247,7 @@ router.post('/verify-payment', authMiddleware, async (req, res) => {
 
     // Payment verified - update DB
     const updatedPartner = await ReferralPartner.findByIdAndUpdate(
-      req.user.id,
+      userId,
       {
         paymentStatus: 'paid',
         razorpayPaymentId: razorpay_payment_id,
