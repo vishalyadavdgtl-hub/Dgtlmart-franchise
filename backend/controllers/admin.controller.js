@@ -625,7 +625,17 @@ exports.getSettings = async (req, res) => {
     if (!settings) {
       settings = await SystemSettings.create({});
     }
-    res.json(settings);
+    
+    // If user is authenticated (Admin or logged-in Partner via proper middleware), return full settings
+    if (req.user) {
+      return res.json(settings);
+    }
+    
+    // Otherwise, return only public templates
+    res.json({
+      ndaTemplateUrl: settings.ndaTemplateUrl,
+      agreementTemplateUrl: settings.agreementTemplateUrl
+    });
   } catch (error) {
     console.error('Error fetching settings:', error);
     res.status(500).json({ error: 'Server error fetching settings' });
