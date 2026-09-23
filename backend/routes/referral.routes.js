@@ -109,13 +109,21 @@ router.post(
       if (!user) return res.status(404).json({ message: "User not found" });
 
       // Update text fields from formData
-      const { businessName, profession, experience, linkedinUrl, preferredCategory, role, franchiseType, commissionRate } = req.body;
+      const { 
+        cityAndState, professionalBackground, marketingExperience, 
+        investmentBudget, franchiseStartDate, existingSetup, 
+        revenueTarget, consultationReadiness, 
+        role, franchiseType, commissionRate 
+      } = req.body;
       
-      if (businessName) user.businessName = businessName;
-      if (profession) user.profession = profession;
-      if (experience) user.experience = experience;
-      if (linkedinUrl) user.linkedinUrl = linkedinUrl;
-      if (preferredCategory) user.preferredCategory = preferredCategory;
+      if (cityAndState) user.cityAndState = cityAndState;
+      if (professionalBackground) user.professionalBackground = professionalBackground;
+      if (marketingExperience) user.marketingExperience = marketingExperience;
+      if (investmentBudget) user.investmentBudget = investmentBudget;
+      if (franchiseStartDate) user.franchiseStartDate = franchiseStartDate;
+      if (existingSetup) user.existingSetup = existingSetup;
+      if (revenueTarget) user.revenueTarget = revenueTarget;
+      if (consultationReadiness) user.consultationReadiness = consultationReadiness;
       if (role) user.role = role;
       if (franchiseType) user.franchiseType = franchiseType;
       if (commissionRate) user.commissionRate = commissionRate;

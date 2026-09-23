@@ -138,19 +138,35 @@ const referralPartnerSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  profession: {
+  professionalBackground: {
     type: String,
     default: null
   },
-  experience: {
+  marketingExperience: {
     type: String,
     default: null
   },
-  linkedinUrl: {
+  investmentBudget: {
     type: String,
     default: null
   },
-  preferredCategory: {
+  franchiseStartDate: {
+    type: String,
+    default: null
+  },
+  existingSetup: {
+    type: String,
+    default: null
+  },
+  revenueTarget: {
+    type: String,
+    default: null
+  },
+  consultationReadiness: {
+    type: String,
+    default: null
+  },
+  cityAndState: {
     type: String,
     default: null
   },

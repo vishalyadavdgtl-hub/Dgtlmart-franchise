@@ -11,6 +11,7 @@ export default function ScheduleMeeting() {
   const location = useLocation();
   const { showToast } = useToast();
   const partnerType = location.state?.partnerType || "Franchise";
+  const partner = location.state?.partner;
   const [meetingLink, setMeetingLink] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +31,7 @@ export default function ScheduleMeeting() {
   }, []);
 
   const handleProceedToPayment = () => {
-    navigate('/payment', { state: { franchiseType: partnerType } });
+    navigate('/payment', { state: { franchiseType: partnerType, partner: partner } });
   };
 
   // Detect platform from URL

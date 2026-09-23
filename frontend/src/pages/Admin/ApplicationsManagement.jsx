@@ -151,28 +151,36 @@ export default function ApplicationsManagement() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Profession</p>
-                          <p className="font-medium text-gray-900">{app.profession || 'N/A'}</p>
+                          <p className="text-xs text-gray-500 mb-1">City & State</p>
+                          <p className="font-medium text-gray-900">{app.cityAndState || 'N/A'}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500 mb-1">Professional Background</p>
+                          <p className="font-medium text-gray-900">{app.professionalBackground || 'N/A'}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500 mb-1">Marketing Experience</p>
+                          <p className="font-medium text-gray-900">{app.marketingExperience || 'N/A'}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Experience</p>
-                          <p className="font-medium text-gray-900">{app.experience || 'N/A'}</p>
+                          <p className="text-xs text-gray-500 mb-1">Investment Budget</p>
+                          <p className="font-medium text-gray-900">{app.investmentBudget || 'N/A'}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">LinkedIn Profile/Website</p>
-                          {app.linkedinUrl ? (
-                            <a href={app.linkedinUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:underline">View Profile</a>
-                          ) : (
-                            <p className="font-medium text-gray-900">N/A</p>
-                          )}
+                          <p className="text-xs text-gray-500 mb-1">Franchise Start Date</p>
+                          <p className="font-medium text-gray-900">{app.franchiseStartDate || 'N/A'}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500 mb-1">Existing Setup</p>
+                          <p className="font-medium text-gray-900">{app.existingSetup || 'N/A'}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Preferred Category</p>
-                          <p className="font-medium text-gray-900">{app.preferredCategory || 'N/A'}</p>
+                          <p className="text-xs text-gray-500 mb-1">Revenue Target</p>
+                          <p className="font-medium text-gray-900">{app.revenueTarget || 'N/A'}</p>
                         </div>
-                        <div className="col-span-2 bg-gray-50 p-3 rounded-lg">
-                          <p className="text-xs text-gray-500 mb-1">Complete Address</p>
-                          <p className="font-medium text-gray-900">{app.address}, {app.city}, {app.state} - {app.pincode}</p>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Consultation Readiness</p>
+                          <p className="font-medium text-gray-900">{app.consultationReadiness || 'N/A'}</p>
                         </div>
                       </div>
                     </div>

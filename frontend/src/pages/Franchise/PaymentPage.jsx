@@ -57,6 +57,7 @@ export default function PaymentPage() {
   const { showToast } = useToast();
 
   const franchiseType = location.state?.franchiseType || localStorage.getItem('selectedProposal') || 'Referral';
+  const partner = location.state?.partner;
   const pkg = PACKAGE_DETAILS[franchiseType] || PACKAGE_DETAILS['Referral'];
 
   const [loading, setLoading] = useState(false);
@@ -92,7 +93,7 @@ export default function PaymentPage() {
         amount: pkg.price,
         franchiseType: franchiseType.toLowerCase(),
         pkgName: pkg.name,
-        userId: partnerInfo?.id || partnerInfo?._id
+        userId: partner?.id || partner?._id || partnerInfo?.id || partnerInfo?._id
       });
 
       const { orderId, amount, currency, keyId } = orderRes.data;
@@ -118,7 +119,7 @@ export default function PaymentPage() {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              userId: partnerInfo?.id || partnerInfo?._id
+              userId: partner?.id || partner?._id || partnerInfo?.id || partnerInfo?._id
             });
 
             if (verifyRes.data.success) {

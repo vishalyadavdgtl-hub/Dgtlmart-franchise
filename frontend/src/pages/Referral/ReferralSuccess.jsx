@@ -60,7 +60,7 @@ export default function ReferralSuccess() {
     if (saved) {
       const parsed = JSON.parse(saved);
       // Sirf tab use karo jab saare required fields filled hain
-      if (parsed.name && parsed.email && parsed.phone && parsed.address) {
+      if (parsed.name && parsed.email && parsed.phone && parsed.cityAndState) {
         return parsed;
       }
     }
@@ -70,12 +70,14 @@ export default function ReferralSuccess() {
       name: p?.fullName || p?.name || '',
       email: p?.email || '',
       phone: p?.phone || '',
-      address: p?.address || '',
-      businessName: p?.businessName || '',
-      profession: p?.profession || '',
-      experience: p?.experience || '',
-      linkedinUrl: p?.linkedinUrl || '',
-      preferredCategory: p?.preferredCategory || ''
+      cityAndState: p?.cityAndState || '',
+      professionalBackground: p?.professionalBackground || '',
+      marketingExperience: p?.marketingExperience || '',
+      investmentBudget: p?.investmentBudget || '',
+      franchiseStartDate: p?.franchiseStartDate || '',
+      existingSetup: p?.existingSetup || '',
+      revenueTarget: p?.revenueTarget || '',
+      consultationReadiness: p?.consultationReadiness || ''
     };
   });
   const [isDocumentSection, setIsDocumentSection] = useState(() => {
@@ -177,8 +179,24 @@ export default function ReferralSuccess() {
       return showToast('Please enter a valid 10-digit phone number', 'error');
     }
     
-    if (!formData.address.trim()) {
-      return showToast('Full Address is required', 'error');
+    if (!formData.cityAndState || !formData.cityAndState.trim()) {
+      return showToast('City & State is required', 'error');
+    }
+    
+    const requiredFields = [
+      { key: 'professionalBackground', label: 'Professional Background' },
+      { key: 'marketingExperience', label: 'Marketing Experience' },
+      { key: 'investmentBudget', label: 'Investment Budget' },
+      { key: 'franchiseStartDate', label: 'Franchise Start Date' },
+      { key: 'existingSetup', label: 'Existing Setup' },
+      { key: 'revenueTarget', label: 'Revenue Target' },
+      { key: 'consultationReadiness', label: 'Consultation Readiness' }
+    ];
+
+    for (const field of requiredFields) {
+      if (!formData[field.key]) {
+        return showToast(`Please answer: ${field.label}`, 'error');
+      }
     }
 
     setIsApplicationSubmitted(true);
@@ -236,7 +254,7 @@ export default function ReferralSuccess() {
       localStorage.removeItem('franchiseFormData');
       
       // Navigate to the Schedule Meeting page after successful submission
-      navigate('/schedule-meeting', { state: { partnerType: selectedProposal } });
+      navigate('/schedule-meeting', { state: { partnerType: selectedProposal, partner: partner } });
       
     } catch (error) {
       console.error('Submit error:', error);
@@ -564,137 +582,176 @@ export default function ReferralSuccess() {
             <div className="p-6 md:p-10">
               <form onSubmit={handleApplyFranchiseSubmit} className="space-y-8 max-w-3xl mx-auto">
                 
-                {/* Mandatory Section */}
+                {/* Qualification Questions */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 border-b pb-3 mb-6">Required Details</h3>
+                  <h3 className="text-xl font-bold text-gray-800 border-b pb-3 mb-6">Qualification Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">1. Full Name <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({...formData, name: e.target.value})}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="Enter your full name"
+                        placeholder="Short answer"
                         required
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">2. Mobile / WhatsApp Number <span className="text-red-500">*</span></label>
+                      <input
+                        type="tel"
+                        pattern="[0-9]{10}"
+                        value={formData.phone}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          if (val.length <= 10) setFormData({...formData, phone: val});
+                        }}
+                        maxLength="10"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        placeholder="Phone number"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">3. Email Address <span className="text-red-500">*</span></label>
                       <input
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="Enter your email"
+                        placeholder="Email"
                         required
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number <span className="text-red-500">*</span></label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">4. City & State <span className="text-red-500">*</span></label>
                       <input
-                        type="tel"
-                        pattern="[0-9]{10}"
-                        title="Please enter a valid 10-digit phone number"
-                        value={formData.phone}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '');
-                          if (val.length <= 10) {
-                            setFormData({...formData, phone: val});
-                          }
-                        }}
-                        maxLength="10"
+                        type="text"
+                        value={formData.cityAndState || ''}
+                        onChange={(e) => setFormData({...formData, cityAndState: e.target.value})}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="Enter your 10-digit phone number"
+                        placeholder="Short answer"
                         required
                       />
                     </div>
                     
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Full Address <span className="text-red-500">*</span></label>
-                      <textarea
-                        value={formData.address}
-                        onChange={(e) => setFormData({...formData, address: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-                        placeholder="Enter your complete address"
-                        rows="2"
-                        required
-                      ></textarea>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Optional Section */}
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800 border-b pb-3 mb-6 mt-8">Professional Details <span className="text-sm font-normal text-gray-500 ml-2">(Optional)</span></h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Business/Company Name</label>
-                      <input
-                        type="text"
-                        value={formData.businessName}
-                        onChange={(e) => setFormData({...formData, businessName: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="e.g. Acme Corp"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Current Profession/Industry</label>
-                      <input
-                        type="text"
-                        value={formData.profession}
-                        onChange={(e) => setFormData({...formData, profession: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="e.g. Digital Marketing, Sales"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Years of Experience</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="50"
-                        value={formData.experience}
-                        onChange={(e) => setFormData({...formData, experience: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="e.g. 5"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">LinkedIn / Website URL</label>
-                      <input
-                        type="text"
-                        value={formData.linkedinUrl}
-                        onChange={(e) => setFormData({...formData, linkedinUrl: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                        placeholder="https://linkedin.com/in/..."
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Preferred Service Category</label>
-                      <input
-                        type="text"
-                        list="service-categories"
-                        value={formData.preferredCategory}
-                        onChange={(e) => setFormData({...formData, preferredCategory: e.target.value})}
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">5. What is your current professional background? <span className="text-red-500">*</span></label>
+                      <select
+                        value={formData.professionalBackground || ''}
+                        onChange={(e) => setFormData({...formData, professionalBackground: e.target.value})}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
-                        placeholder="Select or type a category..."
-                      />
-                      <datalist id="service-categories">
-                        <option value="Website Development" />
-                        <option value="SEO Services" />
-                        <option value="Social Media Management" />
-                        <option value="Digital Marketing" />
-                        <option value="Google Ads" />
-                        <option value="Meta Ads" />
-                        <option value="Other" />
-                      </datalist>
+                        required
+                      >
+                        <option value="" disabled>Select an option</option>
+                        <option value="Business Owner">Business Owner</option>
+                        <option value="Digital Marketing Professional">Digital Marketing Professional</option>
+                        <option value="Sales & Marketing Professional">Sales & Marketing Professional</option>
+                        <option value="IT/Technology Professional">IT/Technology Professional</option>
+                        <option value="Freelancer/Consultant">Freelancer/Consultant</option>
+                        <option value="Job/Corporate Professional">Job/Corporate Professional</option>
+                        <option value="Student">Student</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">6. Do you have experience in Digital Marketing / IT / Sales? <span className="text-red-500">*</span></label>
+                      <select
+                        value={formData.marketingExperience || ''}
+                        onChange={(e) => setFormData({...formData, marketingExperience: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                        required
+                      >
+                        <option value="" disabled>Select an option</option>
+                        <option value="Yes – 5+ years">Yes – 5+ years</option>
+                        <option value="Yes – 2–5 years">Yes – 2–5 years</option>
+                        <option value="Yes – Less than 2 years">Yes – Less than 2 years</option>
+                        <option value="No">No</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">7. What is your investment budget for the DGTLmart Franchise? <span className="text-red-500">*</span></label>
+                      <select
+                        value={formData.investmentBudget || ''}
+                        onChange={(e) => setFormData({...formData, investmentBudget: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                        required
+                      >
+                        <option value="" disabled>Select an option</option>
+                        <option value="₹10,000 – ₹50,000">₹10,000 – ₹50,000</option>
+                        <option value="₹50,000 – ₹1.5 Lakh">₹50,000 – ₹1.5 Lakh</option>
+                        <option value="₹1.5 Lakh – ₹5 Lakh">₹1.5 Lakh – ₹5 Lakh</option>
+                        <option value="Above ₹5 Lakh">Above ₹5 Lakh</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">8. When are you planning to start the franchise? <span className="text-red-500">*</span></label>
+                      <select
+                        value={formData.franchiseStartDate || ''}
+                        onChange={(e) => setFormData({...formData, franchiseStartDate: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                        required
+                      >
+                        <option value="" disabled>Select an option</option>
+                        <option value="Immediately">Immediately</option>
+                        <option value="Within 30 Days">Within 30 Days</option>
+                        <option value="1–3 Months">1–3 Months</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">9. Do you have an existing office/business setup? <span className="text-red-500">*</span></label>
+                      <select
+                        value={formData.existingSetup || ''}
+                        onChange={(e) => setFormData({...formData, existingSetup: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                        required
+                      >
+                        <option value="" disabled>Select an option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                        <option value="Planning to set one up">Planning to set one up</option>
+                        <option value="Work from Home">Work from Home</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">10. What is your expected monthly revenue target from the franchise? <span className="text-red-500">*</span></label>
+                      <select
+                        value={formData.revenueTarget || ''}
+                        onChange={(e) => setFormData({...formData, revenueTarget: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                        required
+                      >
+                        <option value="" disabled>Select an option</option>
+                        <option value="Below ₹50,000">Below ₹50,000</option>
+                        <option value="₹50,000 – ₹1 Lakh">₹50,000 – ₹1 Lakh</option>
+                        <option value="₹1 Lakh – ₹3 Lakh">₹1 Lakh – ₹3 Lakh</option>
+                        <option value="₹3 Lakh – ₹5 Lakh">₹3 Lakh – ₹5 Lakh</option>
+                        <option value="₹5 Lakh+">₹5 Lakh+</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">11. Are you ready for a franchise consultation call? <span className="text-red-500">*</span></label>
+                      <select
+                        value={formData.consultationReadiness || ''}
+                        onChange={(e) => setFormData({...formData, consultationReadiness: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                        required
+                      >
+                        <option value="" disabled>Select an option</option>
+                        <option value="Yes, Call Me">Yes, Call Me</option>
+                        <option value="Yes, WhatsApp Me">Yes, WhatsApp Me</option>
+                        <option value="I need more information first">I need more information first</option>
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -775,8 +832,14 @@ export default function ReferralSuccess() {
                       name: profile.fullName || profile.name || prev.name,
                       email: profile.email || prev.email,
                       phone: profile.phone || prev.phone,
-                      address: profile.address || prev.address,
-                      businessName: profile.businessName || prev.businessName,
+                      cityAndState: profile.cityAndState || prev.cityAndState,
+                      professionalBackground: profile.professionalBackground || prev.professionalBackground,
+                      marketingExperience: profile.marketingExperience || prev.marketingExperience,
+                      investmentBudget: profile.investmentBudget || prev.investmentBudget,
+                      franchiseStartDate: profile.franchiseStartDate || prev.franchiseStartDate,
+                      existingSetup: profile.existingSetup || prev.existingSetup,
+                      revenueTarget: profile.revenueTarget || prev.revenueTarget,
+                      consultationReadiness: profile.consultationReadiness || prev.consultationReadiness,
                     }));
                   }
                 } catch (err) {
