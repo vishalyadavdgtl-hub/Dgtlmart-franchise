@@ -160,6 +160,7 @@ router.put('/partner-update/:id', authMiddleware, async (req, res) => {
       'customProposalsUrl',
       'customDriveUrl',
       'customCrmUrl',
+      'detailsStatus',
     ];
 
     // Req body se sirf allowed fields nikaalo

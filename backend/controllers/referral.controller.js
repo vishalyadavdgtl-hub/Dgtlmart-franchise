@@ -185,7 +185,9 @@ exports.login = async (req, res) => {
         commissionRate: partner.commissionRate,
         isApproved: partner.isApproved,
         status: partner.status,
-        paymentStatus: partner.paymentStatus
+        paymentStatus: partner.paymentStatus,
+        detailsStatus: partner.detailsStatus,
+        meetingStatus: partner.meetingStatus
       }
     });
 
@@ -279,7 +281,9 @@ exports.loginWithOTP = async (req, res) => {
         commissionRate: partner.commissionRate,
         isApproved: partner.isApproved,
         status: partner.status,
-        paymentStatus: partner.paymentStatus
+        paymentStatus: partner.paymentStatus,
+        detailsStatus: partner.detailsStatus,
+        meetingStatus: partner.meetingStatus
       }
     });
 
@@ -292,7 +296,8 @@ exports.loginWithOTP = async (req, res) => {
 // Get detailed stats for Dashboard
 exports.getDashboard = async (req, res) => {
   try {
-    const partner = await ReferralPartner.findById(req.partner.id).select('-password');
+    const partnerId = req.user?.id || req.partner?.id;
+    const partner = await ReferralPartner.findById(partnerId).select('-password');
 
     if (!partner) {
       return res.status(404).json({ error: 'Partner not found' });
@@ -311,18 +316,10 @@ exports.getDashboard = async (req, res) => {
     const pendingApprovals = await ReferralPartner.countDocuments({ referredBy: partner._id, status: 'PENDING' });
 
     res.json({
-      fullName: partner.fullName,
-      email: partner.email,
-      referralCode: partner.referralCode,
+      ...partner.toObject(),
+      id: partner._id,
+      _id: partner._id,
       referralLink: dynamicReferralLink,
-      referralCount: partner.referralCount,
-      totalCommission: partner.totalCommission,
-      role: partner.role || partner.partnerType || 'referral',
-      franchiseType: partner.franchiseType || partner.role || 'referral',
-      commissionRate: partner.commissionRate || 20,
-      status: partner.status,
-      joinedDate: partner.createdAt,
-      territory: partner.territory || null,
       pendingApprovals,
       referredBuyers: referredBuyers.map(buyer => ({
         fullName: buyer.fullName,
@@ -444,30 +441,58 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
-exports.getDashboard = async (req, res) => {
+exports.submitDetails = async (req, res) => {
   try {
-    const user = await ReferralPartner.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    const { userId, ...details } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
     }
 
+    const user = await ReferralPartner.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
-    res.json({
-      fullName: user.fullName,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
-      businessName: user.businessName,
-      status: user.status,
-      profileImage: user.profileImage,
-      referralCode: user.referralCode,
-      referralCount: user.referralCount,
-      totalCommission: user.totalCommission,
-    });
+    // Update the details fields
+    user.cityAndState = details.cityAndState || user.cityAndState;
+    user.professionalBackground = details.professionalBackground || user.professionalBackground;
+    user.marketingExperience = details.marketingExperience || user.marketingExperience;
+    user.investmentBudget = details.investmentBudget || user.investmentBudget;
+    user.franchiseStartDate = details.franchiseStartDate || user.franchiseStartDate;
+    user.existingSetup = details.existingSetup || user.existingSetup;
+    user.revenueTarget = details.revenueTarget || user.revenueTarget;
+    user.consultationReadiness = details.consultationReadiness || user.consultationReadiness;
+    
+    // Change details status to PENDING
+    user.detailsStatus = 'PENDING';
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    await user.save();
+
+    res.json({ message: 'Details submitted successfully. Waiting for admin approval.', user });
+  } catch (error) {
+    console.error('Error submitting details:', error);
+    res.status(500).json({ error: 'Server error. Please try again later.' });
+  }
+};
+
+exports.scheduleMeeting = async (req, res) => {
+  try {
+    const userId = req.body.userId || req.user?.id || req.partner?.id;
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const user = await ReferralPartner.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.meetingStatus = 'PENDING';
+    await user.save();
+
+    res.json({ message: 'Meeting scheduled successfully. Waiting for admin confirmation.', user });
+  } catch (error) {
+    console.error('Error scheduling meeting:', error);
+    res.status(500).json({ error: 'Server error. Please try again later.' });
   }
 };

@@ -188,6 +188,16 @@ const referralPartnerSchema = new mongoose.Schema({
       completedAt: Date
     }]
   },
+  detailsStatus: {
+    type: String,
+    enum: ['NOT_SUBMITTED', 'PENDING', 'APPROVED', 'REJECTED'],
+    default: 'NOT_SUBMITTED'
+  },
+  meetingStatus: {
+    type: String,
+    enum: ['NOT_SCHEDULED', 'PENDING', 'COMPLETED'],
+    default: 'NOT_SCHEDULED'
+  },
   isApproved: {
     type: Boolean,
     default: false

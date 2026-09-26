@@ -45,6 +45,12 @@ router.post('/send-login-otp', otpLimiter, referralController.sendLoginOTP);
 // Login with OTP
 router.post('/login-with-otp', loginLimiter, referralController.loginWithOTP);
 
+// Submit Application Details
+router.post('/submit-details', authMiddleware, referralController.submitDetails);
+
+// Schedule Meeting
+router.post('/schedule-meeting', authMiddleware, referralController.scheduleMeeting);
+
 // Dashboard
 router.get('/dashboard', authMiddleware, referralController.getDashboard);
 
@@ -113,7 +119,7 @@ router.post(
         cityAndState, professionalBackground, marketingExperience, 
         investmentBudget, franchiseStartDate, existingSetup, 
         revenueTarget, consultationReadiness, 
-        role, franchiseType, commissionRate 
+        role, franchiseType, commissionRate, agreementAccepted
       } = req.body;
       
       if (cityAndState) user.cityAndState = cityAndState;
@@ -127,6 +133,7 @@ router.post(
       if (role) user.role = role;
       if (franchiseType) user.franchiseType = franchiseType;
       if (commissionRate) user.commissionRate = commissionRate;
+      if (agreementAccepted) user.agreementAccepted = (agreementAccepted === 'true' || agreementAccepted === true);
       
       if (role === 'dost' || role === 'sathi') {
         user.partnerType = 'franchise';
