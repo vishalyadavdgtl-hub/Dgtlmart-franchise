@@ -31,15 +31,31 @@ export default function ReferralSuccess() {
   const [systemSettings, setSystemSettings] = useState(null);
 
   useEffect(() => {
-    const fetchSettings = async () => {
+    const fetchSettingsAndProfile = async () => {
       try {
         const res = await api.get('/franchise/settings');
         setSystemSettings(res.data);
       } catch (err) {
         console.error('Failed to fetch settings', err);
       }
+
+      try {
+        const res = await api.get('/referral/dashboard');
+        const profile = res.data?.partner || res.data?.user || res.data;
+        if (profile) {
+          setPartnerData(prev => ({
+            ...prev,
+            partner: {
+              ...(prev?.partner || {}),
+              ...profile
+            }
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile', err);
+      }
     };
-    fetchSettings();
+    fetchSettingsAndProfile();
   }, []);
   
   // Modal state
@@ -118,6 +134,12 @@ export default function ReferralSuccess() {
   }, [formData]);
 
   useEffect(() => {
+    if (partnerData) {
+      localStorage.setItem('referralSuccessData', JSON.stringify(partnerData));
+    }
+  }, [partnerData]);
+
+  useEffect(() => {
     // Page load animation
     setTimeout(() => setPageLoaded(true), 100);
     
@@ -162,7 +184,7 @@ export default function ReferralSuccess() {
     }
   };
 
-  const handleApplyFranchiseSubmit = (e) => {
+  const handleApplyFranchiseSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
@@ -199,8 +221,32 @@ export default function ReferralSuccess() {
       }
     }
 
-    setIsApplicationSubmitted(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+      setIsSubmitting(true);
+      const payload = {
+        userId: partner?.id || partner?._id,
+        ...formData
+      };
+      
+      const res = await api.post('/referral/submit-details', payload);
+      showToast(res.data.message || 'Details submitted! Waiting for Admin approval.', 'success');
+      
+      // Update local state
+      setPartnerData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          partner: { ...prev.partner, detailsStatus: 'PENDING' }
+        };
+      });
+      
+      setIsModalOpen(false); // Close the modal
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Failed to submit details', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSelectProposal = (type) => {
@@ -212,7 +258,7 @@ export default function ReferralSuccess() {
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
     if (!documents.kycDocument || !documents.ndaDocument || !documents.signedAgreement) {
-      showToast('Please upload all required documents (KYC, NDA, Agreement)', 'error');
+      showToast('Please check all agreements to proceed', 'error');
       return;
     }
     
@@ -226,36 +272,38 @@ export default function ReferralSuccess() {
       
       submitData.append('role', selectedProposal.toLowerCase());
       submitData.append('franchiseType', selectedProposal.toLowerCase());
-      submitData.append('commissionRate', selectedProposal === 'Referral' ? 10 : 25);
+      submitData.append('commissionRate', selectedProposal === 'Referral' ? 20 : 60);
       
       if (partner?.id || partner?._id) {
         submitData.append('userId', partner.id || partner._id);
       }
       
-      submitData.append('kycDocument', documents.kycDocument);
-      submitData.append('ndaDocument', documents.ndaDocument);
-      submitData.append('signedAgreement', documents.signedAgreement);
+      // Files are no longer required, user just checks boxes
+      // if (documents.kycDocument instanceof File) submitData.append('kycDocument', documents.kycDocument);
+      // if (documents.ndaDocument instanceof File) submitData.append('ndaDocument', documents.ndaDocument);
+      // if (documents.signedAgreement instanceof File) submitData.append('signedAgreement', documents.signedAgreement);
+      
+      submitData.append('agreementAccepted', 'true');
       
       await api.post('/referral/upload-documents', submitData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      showToast(`Successfully applied for ${selectedProposal} Partner! Pending Admin Approval.`, 'success');
+      showToast(`Successfully agreed to terms for ${selectedProposal} Partner!`, 'success');
+      
+      navigate('/payment', { state: { franchiseType: selectedProposal, partner: { ...partner, role: selectedProposal.toLowerCase() } } });
       
       setIsModalOpen(false);
       setIsApplicationSubmitted(false);
       setIsDocumentSection(false);
-      setSelectedProposal(null);
       setDocuments({ kycDocument: null, ndaDocument: null, signedAgreement: null });
       localStorage.removeItem('isModalOpen');
       localStorage.removeItem('isApplicationSubmitted');
       localStorage.removeItem('isDocumentSection');
       localStorage.removeItem('selectedProposal');
       localStorage.removeItem('franchiseFormData');
-      
-      // Navigate to the Schedule Meeting page after successful submission
-      navigate('/schedule-meeting', { state: { partnerType: selectedProposal, partner: partner } });
-      
+      // Navigate to the Payment page after successful document submission
+      navigate('/payment', { state: { franchiseType: selectedProposal, partner: partner } });
     } catch (error) {
       console.error('Submit error:', error);
       showToast(error.response?.data?.message || 'Failed to submit application', 'error');
@@ -299,107 +347,57 @@ export default function ReferralSuccess() {
         <div className="min-h-screen bg-gray-50 flex flex-col">
           <Navbar />
           <div className="flex-1 py-8 px-4 sm:px-6">
-            <ApplicationStepper currentStep={2} />
+            <ApplicationStepper currentStep={4} />
             <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden animate-scale-in">
               <div className="bg-blue-600 p-8 text-white text-center">
-                <h2 className="text-3xl font-bold">Upload Signed Documents</h2>
-                <p className="text-blue-100 text-base mt-2">Please download the templates, sign them, and upload them back along with your KYC.</p>
+                <h2 className="text-3xl font-bold">Review & Agree to Documents</h2>
+                <p className="text-blue-100 text-base mt-2">Please read the agreements below and confirm your acceptance to proceed.</p>
               </div>
               
               <div className="p-8 md:p-10">
                 <form onSubmit={handleFinalSubmit} className="space-y-8">
                   
-                  <div className="grid grid-cols-2 gap-4 md:gap-6 mb-8">
-                    <div className="border border-gray-200 rounded-xl p-4 md:p-6 text-center hover:shadow-md transition-shadow bg-gray-50 flex flex-col items-center justify-center">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-2 md:mb-4">
-                        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <h4 className="font-bold text-gray-900 mb-1 md:mb-2 text-sm md:text-base">NDA Template</h4>
-                      <p className="text-xs md:text-sm text-gray-500 mb-3 md:mb-4">Download and sign the Non-Disclosure Agreement.</p>
-                      {ndaUrl ? (
-                        <a href={ndaUrl} target="_blank" rel="noreferrer" className="inline-flex items-center text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
-                          Download PDF &rarr;
-                        </a>
-                      ) : (
-                        <span className="text-sm text-gray-400">Template not uploaded by Admin</span>
-                      )}
-                    </div>
-                    
-                    <div className="border border-gray-200 rounded-xl p-4 md:p-6 text-center hover:shadow-md transition-shadow bg-gray-50 flex flex-col items-center justify-center">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-2 md:mb-4">
-                        <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                      <h4 className="font-bold text-gray-900 mb-1 md:mb-2 text-sm md:text-base">Partnership Agreement</h4>
-                      <p className="text-xs md:text-sm text-gray-500 mb-3 md:mb-4">Download and sign the {selectedProposal || 'Partnership'} Agreement.</p>
-                      {agreementUrl ? (
-                        <a href={agreementUrl} target="_blank" rel="noreferrer" className="inline-flex items-center text-xs md:text-sm font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
-                          Download PDF &rarr;
-                        </a>
-                      ) : (
-                        <span className="text-sm text-gray-400">Template not uploaded by Admin</span>
-                      )}
-                    </div>
-                  </div>
 
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">1. KYC Document (Aadhar/PAN) <span className="text-red-500">*</span> <span className="text-gray-400 font-normal text-xs ml-1">(PDF, JPG, PNG up to 5MB)</span></label>
+
+                  <div className="space-y-6 bg-blue-50/50 p-6 rounded-xl border border-blue-100">
+                    <label className="flex items-start gap-4 cursor-pointer group">
                       <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file && file.size > 5 * 1024 * 1024) {
-                            showToast('File size must be less than 5MB', 'error');
-                            e.target.value = '';
-                            return;
-                          }
-                          setDocuments({...documents, kycDocument: file});
-                        }}
-                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-200 rounded-lg p-1"
-                        required
+                        type="checkbox"
+                        checked={!!documents.kycDocument}
+                        onChange={(e) => setDocuments({...documents, kycDocument: e.target.checked})}
+                        className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">2. Upload Signed NDA <span className="text-red-500">*</span> <span className="text-gray-400 font-normal text-xs ml-1">(PDF, JPG, PNG up to 5MB)</span></label>
+                      <div>
+                        <span className="block text-sm font-semibold text-gray-900">1. Information Accuracy <span className="text-red-500">*</span></span>
+                        <span className="block text-xs text-gray-500 mt-1">I confirm that all personal and professional details provided in this application are accurate and true to the best of my knowledge.</span>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start gap-4 cursor-pointer group">
                       <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file && file.size > 5 * 1024 * 1024) {
-                            showToast('File size must be less than 5MB', 'error');
-                            e.target.value = '';
-                            return;
-                          }
-                          setDocuments({...documents, ndaDocument: file});
-                        }}
-                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-200 rounded-lg p-1"
-                        required
+                        type="checkbox"
+                        checked={!!documents.ndaDocument}
+                        onChange={(e) => setDocuments({...documents, ndaDocument: e.target.checked})}
+                        className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">3. Upload Signed Agreement <span className="text-red-500">*</span> <span className="text-gray-400 font-normal text-xs ml-1">(PDF, JPG, PNG up to 5MB)</span></label>
+                      <div>
+                        <span className="block text-sm font-semibold text-gray-900">2. Confidentiality Agreement <span className="text-red-500">*</span></span>
+                        <span className="block text-xs text-gray-500 mt-1">I agree to maintain strict confidentiality regarding DGTLmart's business models, pricing, and client data as per standard Non-Disclosure guidelines.</span>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start gap-4 cursor-pointer group">
                       <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file && file.size > 5 * 1024 * 1024) {
-                            showToast('File size must be less than 5MB', 'error');
-                            e.target.value = '';
-                            return;
-                          }
-                          setDocuments({...documents, signedAgreement: file});
-                        }}
-                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-200 rounded-lg p-1"
-                        required
+                        type="checkbox"
+                        checked={!!documents.signedAgreement}
+                        onChange={(e) => setDocuments({...documents, signedAgreement: e.target.checked})}
+                        className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
                       />
-                    </div>
+                      <div>
+                        <span className="block text-sm font-semibold text-gray-900">3. Standard Terms & Conditions <span className="text-red-500">*</span></span>
+                        <span className="block text-xs text-gray-500 mt-1">I understand and agree to the standard terms of the DGTLmart {selectedProposal || 'Partnership'} Program, including the commission structures and payout timelines.</span>
+                      </div>
+                    </label>
                   </div>
 
                   <div className="pt-8 mt-8 flex gap-4 border-t border-gray-200">
@@ -441,7 +439,7 @@ export default function ReferralSuccess() {
         <div className="min-h-screen bg-gray-50 flex flex-col">
           <Navbar />
           <div className="flex-1 py-12 px-4 sm:px-6">
-            <ApplicationStepper currentStep={1} />
+            <ApplicationStepper currentStep={4} />
             <div className="max-w-6xl mx-auto mt-4">
               <div className="text-center mb-12 animate-scale-in">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Choose Your Partnership Proposal</h2>
@@ -522,7 +520,7 @@ export default function ReferralSuccess() {
                     <p className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider">Premium Features</p>
                     <ul className="grid grid-cols-2 gap-x-4 gap-y-3 mb-8 flex-1">
                       {[
-                        'Maximum Commission 40%',
+                        'Maximum Commission 60%',
                         'Higher earnings potential',
                         'Dedicated support',
                         'Marketing resources',
@@ -552,15 +550,6 @@ export default function ReferralSuccess() {
                     </Button>
                   </div>
                 </div>
-              </div>
-              
-              <div className="text-center mt-12">
-                <button 
-                  onClick={() => setIsApplicationSubmitted(false)}
-                  className="text-gray-500 hover:text-gray-800 font-medium underline transition-colors"
-                >
-                  Go back to edit application details
-                </button>
               </div>
             </div>
           </div>
@@ -789,39 +778,55 @@ export default function ReferralSuccess() {
       <Navbar />
       
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <div className={`transition-all duration-500 transform ${pageLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          {/* Success Header - More Compact */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mb-4 animate-scale-in">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
+        <div className={`transition-all duration-700 transform ${pageLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          {/* Success Header - More Premium */}
+          <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sm:p-12 mb-8 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-blue-500"></div>
+            
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-green-50 rounded-full mb-6 animate-scale-in">
+              <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg shadow-green-200">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            
+            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
               Registration Successful!
             </h1>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 inline-block text-left max-w-md">
-              <div className="flex gap-3">
-                <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            
+            <div className="bg-amber-50/80 border border-amber-200/60 rounded-2xl p-5 mb-8 inline-block text-left max-w-lg shadow-sm">
+              <div className="flex gap-4">
+                <div className="mt-0.5 bg-amber-100 p-1.5 rounded-full text-amber-600">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
                 <div>
-                  <p className="text-yellow-800 font-bold text-sm uppercase tracking-wide">Account Pending Approval</p>
-                  <p className="text-yellow-700 text-xs mt-1 leading-relaxed">
+                  <p className="text-amber-900 font-bold text-sm uppercase tracking-wider mb-1">Account Pending Approval</p>
+                  <p className="text-amber-800/80 text-sm leading-relaxed">
                     Your account has been created and is currently being reviewed by our team. You will be able to log in to your dashboard once an admin verifies your account.
                   </p>
                 </div>
               </div>
             </div>
-            <p className="text-gray-600 text-sm mb-1">
-              Welcome to the DGTLmart Referral Partner Program
-            </p>
-            <p className="text-lg font-semibold text-blue-700 mb-6">
-              {partner?.fullName}
-            </p>
+            
+            <div className="space-y-1 mb-8">
+              <p className="text-gray-500 text-sm font-medium uppercase tracking-wider">
+                Welcome to the DGTLmart Partner Program
+              </p>
+              <p className="text-2xl font-bold text-blue-700">
+                {partner?.fullName}
+              </p>
+            </div>
+            
             <Button 
-              variant="primary" 
-              className="py-3 px-10 text-lg font-bold shadow-lg md:py-4 md:px-12 md:text-xl w-full sm:w-auto"
+              variant={partner?.detailsStatus === 'PENDING' || partner?.meetingStatus === 'PENDING' || partner?.paymentStatus === 'paid' ? "outline" : "primary"}
+              className={`py-3.5 px-8 text-base font-bold rounded-xl transition-all ${
+                partner?.detailsStatus === 'PENDING' || partner?.meetingStatus === 'PENDING' || partner?.paymentStatus === 'paid' 
+                  ? '!bg-blue-700 !text-white !border-blue-700 !border-2 cursor-not-allowed disabled:!opacity-100 shadow-md' 
+                  : 'shadow-lg shadow-blue-200'
+              }`}
               onClick={async () => {
                 try {
                   const res = await api.get('/referral/dashboard');
@@ -841,27 +846,73 @@ export default function ReferralSuccess() {
                       revenueTarget: profile.revenueTarget || prev.revenueTarget,
                       consultationReadiness: profile.consultationReadiness || prev.consultationReadiness,
                     }));
+                    
+                    if (profile.detailsStatus === 'PENDING') {
+                      showToast('Your details are pending admin approval.', 'info');
+                      setPartnerData(prev => ({...prev, partner: {...prev.partner, detailsStatus: 'PENDING'}}));
+                      return;
+                    }
+
+                    if (profile.detailsStatus === 'APPROVED') {
+                      if (!profile.meetingStatus || profile.meetingStatus === 'NOT_SCHEDULED') {
+                        navigate('/schedule-meeting', { state: { partner: profile } });
+                        return;
+                      }
+                      if (profile.meetingStatus === 'PENDING') {
+                        showToast('Your meeting completion is pending admin approval.', 'info');
+                        setPartnerData(prev => ({...prev, partner: {...prev.partner, meetingStatus: 'PENDING'}}));
+                        return;
+                      }
+                      if (profile.meetingStatus === 'COMPLETED') {
+                        setIsApplicationSubmitted(true);
+                        setIsModalOpen(true);
+                        return;
+                      }
+                    } else {
+                      setIsApplicationSubmitted(false);
+                      setIsModalOpen(true);
+                    }
+                  } else {
+                    setIsModalOpen(true);
                   }
                 } catch (err) {
                   console.error('Could not fetch profile:', err);
+                  setIsModalOpen(true);
                 }
-                setIsModalOpen(true);
               }}
+              disabled={partner?.detailsStatus === 'PENDING' || partner?.meetingStatus === 'PENDING' || partner?.paymentStatus === 'paid'}
             >
-              Apply for Franchise
+              <div className="flex items-center gap-2 justify-center">
+                {(partner?.detailsStatus === 'PENDING' || partner?.meetingStatus === 'PENDING' || partner?.paymentStatus === 'paid') && (
+                  <svg className="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+                {partner?.paymentStatus === 'paid' ? 'Paid - Pending Final Activation' 
+                 : partner?.detailsStatus === 'PENDING' ? 'Details Pending Approval' 
+                 : (partner?.detailsStatus === 'APPROVED' && (!partner?.meetingStatus || partner?.meetingStatus === 'NOT_SCHEDULED')) ? 'Schedule Meeting'
+                 : (partner?.detailsStatus === 'APPROVED' && partner?.meetingStatus === 'PENDING') ? 'Meeting Pending Approval'
+                 : (partner?.detailsStatus === 'APPROVED' && partner?.meetingStatus === 'COMPLETED') ? 'Proceed to Application'
+                 : 'Apply for Franchise'}
+              </div>
             </Button>
           </div>
 
           {/* Main Card */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-            <div className="p-6">
+          <div className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100">
+            <div className="p-8">
               {/* Referral Code Info Section */}
-              <div className="mb-8">
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-5 text-center">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-2">
+              <div className="mb-10">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100/50 rounded-2xl p-6 text-center relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <svg className="w-16 h-16 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-blue-900 mb-2 relative z-10">
                     Referral Code & Link
                   </h3>
-                  <p className="text-sm text-blue-800">
+                  <p className="text-sm text-blue-800/80 max-w-lg mx-auto relative z-10">
                     Your unique referral code and tracking link will be generated automatically and made available on your dashboard once your account is approved by our team.
                   </p>
                 </div>
@@ -919,9 +970,31 @@ export default function ReferralSuccess() {
                     variant="primary" 
                     fullWidth 
                     className="py-2.5 text-sm flex-1"
-                    onClick={() => setIsModalOpen(true)}
+                    disabled={partner?.detailsStatus === 'PENDING' || partner?.meetingStatus === 'PENDING'}
+                    onClick={async () => {
+                      if (partner?.detailsStatus === 'PENDING' || partner?.meetingStatus === 'PENDING') return;
+                      
+                      if (partner?.detailsStatus === 'APPROVED') {
+                        if (!partner?.meetingStatus || partner?.meetingStatus === 'NOT_SCHEDULED') {
+                          navigate('/schedule-meeting', { state: { partner } });
+                          return;
+                        }
+                        if (partner?.meetingStatus === 'COMPLETED') {
+                          setIsApplicationSubmitted(true);
+                          setIsModalOpen(true);
+                          return;
+                        }
+                      } else {
+                        setIsApplicationSubmitted(false);
+                        setIsModalOpen(true);
+                      }
+                    }}
                   >
-                    Apply for Franchise
+                    {partner?.detailsStatus === 'PENDING' ? 'Details Pending Approval' 
+                     : (partner?.detailsStatus === 'APPROVED' && (!partner?.meetingStatus || partner?.meetingStatus === 'NOT_SCHEDULED')) ? 'Schedule Meeting'
+                     : (partner?.detailsStatus === 'APPROVED' && partner?.meetingStatus === 'PENDING') ? 'Meeting Pending Approval'
+                     : (partner?.detailsStatus === 'APPROVED' && partner?.meetingStatus === 'COMPLETED') ? 'Proceed to Application'
+                     : 'Apply for Franchise'}
                   </Button>
                 </div>
               </div>

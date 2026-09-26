@@ -270,8 +270,9 @@ export default function Contact() {
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 mb-1 md:mb-2">Visit Our Office</h3>
                   <p className="text-slate-600 leading-relaxed text-sm md:text-base">
-                    G-31, Sector-3, Noida,<br />
-                    Uttar Pradesh (201301)
+                    Office 95, New Post Office, GF, 24 Foot Rd,<br />
+                    Naharpur, Sector 87, Neharpar Faridabad,<br />
+                    Faridabad, Haryana 121014
                   </p>
                 </div>
               </div>
@@ -286,8 +287,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 mb-1 md:mb-2">Call Us</h3>
-                  <a href="tel:+919716301323" className="block text-slate-600 text-sm md:text-base hover:text-blue-600 transition-colors">+91 9716301323</a>
-                  <a href="tel:+919716301323" className="block text-slate-600 text-sm md:text-base hover:text-blue-600 transition-colors">+91 9716301323</a>
+                  <a href="tel:+919810559439" className="block text-slate-600 text-sm md:text-base hover:text-blue-600 transition-colors">+91 9810559439</a>
                 </div>
               </div>
             </div>
@@ -301,8 +301,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 mb-1 md:mb-2">Email Us</h3>
-                  <a href="mailto:info@dgtlmart.com" className="block text-slate-600 text-sm md:text-base hover:text-blue-600 transition-colors">info@dgtlmart.com</a>
-                  <a href="mailto:support@dgtlmart.com" className="block text-slate-600 text-sm md:text-base hover:text-blue-600 transition-colors">support@dgtlmart.com</a>
+                  <a href="mailto:contact@dgtlmart.com" className="block text-slate-600 text-sm md:text-base hover:text-blue-600 transition-colors">contact@dgtlmart.com</a>
                 </div>
               </div>
             </div>

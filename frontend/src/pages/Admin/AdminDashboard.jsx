@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import AdminSidebar from '../../components/Admin/Sidebar';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { adminAPI } from '../../utils/api';
+import Modal from '../../components/common/Modal';
 import { useToast } from '../../components/common/Toast';
 
 export default function AdminDashboard() {
@@ -243,77 +244,90 @@ const handleUpdate = async () => {
             </>
           )}
       
-{selectedBuyer && (
-  <div className="bg-white p-6 mt-6 rounded shadow">
-    <h2 className="text-xl font-bold mb-4">Edit Franchise</h2>
-
-    {/* NAME */}
-    <label className="block font-medium">Name</label>
-    <input
-      className="border p-2 mb-3 w-full rounded"
-      value={selectedBuyer.fullName}
-      onChange={(e) =>
-        setSelectedBuyer({
-          ...selectedBuyer,
-          fullName: e.target.value
-        })
-      }
-    />
-
-    {/* BUSINESS */}
-    <label className="block font-medium">Business</label>
-    <input
-      className="border p-2 mb-3 w-full rounded"
-      value={selectedBuyer.businessName || ""}
-      onChange={(e) =>
-        setSelectedBuyer({
-          ...selectedBuyer,
-          businessName: e.target.value
-        })
-      }
-    />
-
-    {/* PACKAGE */}
-    <label className="block font-medium">Package</label>
-    <input
-      className="border p-2 mb-3 w-full rounded"
-      value={selectedBuyer.selectedPackage?.packageName || ""}
-      onChange={(e) =>
-        setSelectedBuyer({
-          ...selectedBuyer,
-          selectedPackage: {
-            ...selectedBuyer.selectedPackage,
-            packageName: e.target.value
-          }
-        })
-      }
-    />
-
-    {/* PAYMENT */}
-    <label className="block font-medium">Payment Status</label>
-    <select
-      className="border p-2 mb-4 w-full rounded"
-      value={selectedBuyer.paymentStatus}
-      onChange={(e) =>
-        setSelectedBuyer({
-          ...selectedBuyer,
-          paymentStatus: e.target.value
-        })
-      }
-    >
-      <option value="pending">Pending</option>
-      <option value="paid">Paid</option>
-      <option value="failed">Failed</option>
-    </select>
-
-    <button
-      onClick={handleUpdate}
-      className="bg-green-500 text-white px-4 py-2 rounded"
-    >
-      Update
-    </button>
-  </div>
-)}
+      <Modal
+        isOpen={!!selectedBuyer}
+        onClose={() => setSelectedBuyer(null)}
+        title="Edit Franchise Buyer"
+      >
+        {selectedBuyer && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <input
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                value={selectedBuyer.fullName}
+                onChange={(e) =>
+                  setSelectedBuyer({
+                    ...selectedBuyer,
+                    fullName: e.target.value
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Business</label>
+              <input
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                value={selectedBuyer.businessName || ""}
+                onChange={(e) =>
+                  setSelectedBuyer({
+                    ...selectedBuyer,
+                    businessName: e.target.value
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Package</label>
+              <input
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                value={selectedBuyer.selectedPackage?.packageName || ""}
+                onChange={(e) =>
+                  setSelectedBuyer({
+                    ...selectedBuyer,
+                    selectedPackage: {
+                      ...selectedBuyer.selectedPackage,
+                      packageName: e.target.value
+                    }
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                value={selectedBuyer.paymentStatus}
+                onChange={(e) =>
+                  setSelectedBuyer({
+                    ...selectedBuyer,
+                    paymentStatus: e.target.value
+                  })
+                }
+              >
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+            
+            <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+              <button
+                onClick={() => setSelectedBuyer(null)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdate}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
         </div>
       </div>
     </div>

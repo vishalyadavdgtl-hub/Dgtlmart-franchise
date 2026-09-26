@@ -69,25 +69,18 @@ export default function Navbar({ isAdmin = false, onLogout }) {
     const ensureDetails = async () => {
       try {
         const token = localStorage.getItem("partnerToken");
-        const user = localStorage.getItem("partnerUser");
-        const parsed = user ? JSON.parse(user) : null;
-        if (token && (!parsed || !parsed.partnerType)) {
+        if (token) {
           const res = await referralAPI.getDashboard();
           if (!mounted) return;
           const p = {
-            fullName: res.data.fullName,
-            email: res.data.email, // Ensure email is stored
-            partnerType: res.data.partnerType,
-            commissionRate: res.data.commissionRate,
-            referralCode: res.data.referralCode,
+            ...res.data,
+            fullName: res.data.fullName || res.data.name,
+            partnerType: res.data.partnerType || res.data.role,
           };
           localStorage.setItem("partnerUser", JSON.stringify(p));
           setPartnerName(p.fullName || "Partner");
           setPartnerType(p.partnerType || "referral");
           setCommissionRate(p.commissionRate || null);
-        } else if (parsed) {
-          setPartnerType(parsed.partnerType || "");
-          setCommissionRate(parsed.commissionRate || null);
         }
       } catch (err) {
         console.warn(

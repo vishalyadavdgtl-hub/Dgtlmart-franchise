@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import AdminSidebar from "../../components/Admin/Sidebar";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Modal from "../../components/common/Modal";
 
 import { adminAPI } from "../../utils/api";
 import { useToast } from "../../components/common/Toast";
+
 import Button from "../../components/common/Button";
 
 export default function FranchiseManagement() {
@@ -453,7 +455,7 @@ export default function FranchiseManagement() {
         </div>
       </div>
 
-      {/* Commission Update Modal */}
+      {/* Partner Details Modal */}
       <Modal
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
@@ -464,11 +466,11 @@ export default function FranchiseManagement() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h4 className="text-sm font-semibold text-gray-500">Name</h4>
-                <p className="font-medium">{selectedPartner.firstName} {selectedPartner.lastName}</p>
+                <p className="font-medium">{selectedPartner.fullName || "N/A"}</p>
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-gray-500">Partner Type</h4>
-                <p className="font-medium capitalize">{selectedPartner.partnerType || 'Referral'}</p>
+                <p className="font-medium capitalize">{selectedPartner.role || selectedPartner.partnerType || 'Referral'}</p>
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-gray-500">Email</h4>
@@ -481,17 +483,20 @@ export default function FranchiseManagement() {
               <div className="col-span-2">
                 <h4 className="text-sm font-semibold text-gray-500">Address</h4>
                 <p className="font-medium">
-                  {selectedPartner.address}, {selectedPartner.city},<br />
-                  {selectedPartner.state} - {selectedPartner.pincode}
+                  {(() => {
+                    let addr = [selectedPartner.address, selectedPartner.city, selectedPartner.state].filter(Boolean).join(', ');
+                    if (selectedPartner.pincode) addr += ` - ${selectedPartner.pincode}`;
+                    return addr.replace(/,\s*,/g, ',').replace(/[\s,\-]+$/, '');
+                  })() || "N/A"}
                 </p>
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-gray-500">PAN Number</h4>
-                <p className="font-medium font-mono uppercase">{selectedPartner.panNumber || 'N/A'}</p>
+                <h4 className="text-sm font-semibold text-gray-500">Selected Package</h4>
+                <p className="font-medium">{selectedPartner.selectedPackage?.packageName || selectedPartner.selectedPackage?.name || "None"}</p>
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-gray-500">Aadhar Number</h4>
-                <p className="font-medium font-mono">{selectedPartner.aadharNumber || 'N/A'}</p>
+                <h4 className="text-sm font-semibold text-gray-500">Commission Rate</h4>
+                <p className="font-medium">{selectedPartner.commissionRate ? `${selectedPartner.commissionRate}%` : "Default"}</p>
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-gray-500">Status</h4>
@@ -514,28 +519,62 @@ export default function FranchiseManagement() {
             </div>
             
             {/* Quick Actions in Modal */}
-            <div className="mt-6 pt-4 border-t flex gap-2 justify-end">
+            <div className="mt-6 pt-4 border-t flex flex-col sm:flex-row gap-2 justify-between items-center">
+              <Link 
+                to={`/admin/partner/${selectedPartner._id}`}
+                className="w-full sm:w-auto px-4 py-2 bg-indigo-50 text-indigo-700 font-semibold rounded-lg hover:bg-indigo-100 transition-colors text-center"
+              >
+                View Full Dashboard
+              </Link>
+              
               {selectedPartner.status === 'PENDING' && (
                 <button
                   disabled={updating}
                   onClick={() => handleStatusChange(selectedPartner._id, 'ACTIVE')}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
                 >
                   Approve
-                </button>
-              )}
-              {selectedPartner.status !== 'REJECTED' && (
-                <button
-                  disabled={updating}
-                  onClick={() => handleStatusChange(selectedPartner._id, 'REJECTED')}
-                  className="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-                >
-                  Reject
                 </button>
               )}
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={isCommissionModalOpen}
+        onClose={() => setIsCommissionModalOpen(false)}
+        title="Update Total Commission"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              New Commission Amount (₹)
+            </label>
+            <input
+              type="number"
+              value={newCommission}
+              onChange={(e) => setNewCommission(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter amount"
+            />
+          </div>
+          <div className="flex gap-3 justify-end mt-6">
+            <button
+              onClick={() => setIsCommissionModalOpen(false)}
+              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCommissionUpdate}
+              disabled={updating || !newCommission}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 font-medium"
+            >
+              {updating ? 'Updating...' : 'Update Commission'}
+            </button>
+          </div>
+        </div>
       </Modal>
 
       <Modal

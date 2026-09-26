@@ -78,7 +78,7 @@ function EditableField({ label, value, field, isEditMode, onChange, type = "text
   return (
     <div className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
       <span className="text-slate-500 text-sm">{label}</span>
-      <span className={`font-semibold text-sm capitalize ${label === "Role" ? "text-indigo-700" :
+      <span className={`font-semibold text-sm ${label !== "Email" ? "capitalize" : ""} ${label === "Role" ? "text-indigo-700" :
         label === "Total Earnings" ? "text-emerald-600" :
           "text-slate-800"
         }`}>
@@ -91,31 +91,26 @@ function EditableField({ label, value, field, isEditMode, onChange, type = "text
 // ✅ Editable stat card component
 function EditableStatCard({ card, isEditMode, onEdit }) {
   return (
-    <div className={`bg-gradient-to-br ${card.color} rounded-2xl p-6 text-white shadow-lg`}>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="text-white/80 text-sm font-medium">{card.label}</p>
-          {card.note && <p className="text-white/60 text-xs">{card.note}</p>}
-        </div>
-        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={card.icon} />
-          </svg>
-        </div>
+    <div className={`bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between`}>
+      <div>
+        <p className="text-slate-500 text-xs font-semibold tracking-wide uppercase mb-1">{card.label}</p>
+        {isEditMode && card.editable ? (
+          <input
+            type={card.inputType || "text"}
+            value={card.rawValue ?? card.value}
+            onChange={(e) => onEdit(card.editKey, e.target.value)}
+            className="text-2xl font-bold bg-white border border-indigo-300 rounded-lg px-2 py-1 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 w-full"
+          />
+        ) : (
+          <p className="text-2xl font-bold text-slate-800">{card.value}</p>
+        )}
+        {card.note && <p className="text-slate-400 text-xs mt-1">{card.note}</p>}
       </div>
-      {isEditMode && card.editable ? (
-        <input
-          type={card.inputType || "text"}
-          value={card.rawValue ?? card.value}
-          onChange={(e) => onEdit(card.editKey, e.target.value)}
-          className="text-2xl font-bold bg-white/20 border border-white/40 rounded-xl px-3 py-1 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 w-full"
-        />
-      ) : (
-        <p className="text-3xl font-bold">{card.value}</p>
-      )}
-      {isEditMode && card.editable && (
-        <p className="text-white/50 text-xs mt-1">✏️ Editing enabled</p>
-      )}
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${card.iconBg || 'bg-slate-100'}`}>
+        <svg className={`w-6 h-6 ${card.iconColor || 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={card.icon} />
+        </svg>
+      </div>
     </div>
   );
 }
@@ -123,14 +118,14 @@ function EditableStatCard({ card, isEditMode, onEdit }) {
 // ✅ NEW: Editable status card (top row)
 function EditableStatusCard({ c, isEditMode, onEdit }) {
   return (
-    <div className={`${c.color} border rounded-2xl p-4`}>
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{c.label}</p>
+    <div className={`${c.color} border rounded-lg px-3 py-2 shadow-sm`}>
+      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{c.label}</p>
       {isEditMode && c.editable ? (
         c.options ? (
           <select
             value={c.rawValue ?? c.value}
             onChange={(e) => onEdit(c.editKey, e.target.value)}
-            className={`text-xl font-bold ${c.text} capitalize bg-white border border-indigo-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400 w-full`}
+            className={`text-sm font-bold ${c.text} capitalize bg-white border border-indigo-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-indigo-400 w-full`}
           >
             {c.options.map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
@@ -141,13 +136,13 @@ function EditableStatusCard({ c, isEditMode, onEdit }) {
             type={c.inputType || "text"}
             value={c.rawValue ?? c.value}
             onChange={(e) => onEdit(c.editKey, e.target.value)}
-            className={`text-xl font-bold ${c.text} bg-white border border-indigo-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400 w-full`}
+            className={`text-sm font-bold ${c.text} bg-white border border-indigo-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-indigo-400 w-full`}
           />
         )
       ) : (
-        <p className={`text-xl font-bold ${c.text} capitalize`}>{c.value}</p>
+        <p className={`text-sm font-bold ${c.text} capitalize truncate`}>{c.value}</p>
       )}
-      {c.sub && <p className="text-xs text-slate-400 mt-0.5">{c.sub}</p>}
+      {c.sub && <p className="text-[9px] text-slate-400 truncate">{c.sub}</p>}
     </div>
   );
 }
@@ -155,7 +150,10 @@ function EditableStatusCard({ c, isEditMode, onEdit }) {
 export default function FranchiseDashboard({ adminPartner, isAdminEditMode = false, onPartnerUpdate }) {
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const activeTab = searchParams.get("tab") || "overview";
+  const setActiveTab = (tab) => navigate(`?tab=${tab}`, { replace: true });
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [packages, setPackages] = useState([]);
@@ -163,7 +161,6 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
   const [myLeads, setMyLeads] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [user, setUser] = useState(null);
-  const location = useLocation();
   const [isSaving, setIsSaving] = useState(false);
   const [systemSettings, setSystemSettings] = useState(null);
 
@@ -299,9 +296,6 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
       setUser(adminPartner);
       setStats(adminPartner);
       fetchAll(adminPartner);
-      const params = new URLSearchParams(location.search);
-      const tab = params.get("tab");
-      if (tab) setActiveTab(tab);
       return;
     }
 
@@ -340,20 +334,20 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
           navigate(isAdminView ? "/manage-dgtl" : "/partner-login");
           return;
         }
-        if (!isAdminView && data.status !== "ACTIVE") {
-          navigate("/waiting-for-approval");
-          return;
-        }
+        // Approval check removed as per user request
+        // if (!isAdminView && data.status !== "ACTIVE") {
+        //   navigate("/waiting-for-approval");
+        //   return;
+        // }
 
         if (isAdminView) {
           setUser(data);
+          setStats(data);
         } else {
           setUser(data.user || data);
+          setStats(data.user || data);
+          localStorage.setItem('partnerUser', JSON.stringify(data.user || data));
         }
-
-        const params = new URLSearchParams(location.search);
-        const tab = params.get("tab");
-        if (tab) setActiveTab(tab);
 
         fetchAll(data);
       } catch (err) {
@@ -363,7 +357,7 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
     };
 
     fetchUser();
-  }, [partnerId, location, adminPartner]);
+  }, [partnerId, adminPartner]);
 
   // ✅ Save button dikhao jab edit mode ON ho aur changes ho
   useEffect(() => {
@@ -371,6 +365,22 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
       // Auto-remind — optional
     }
   }, [isAdminEditMode, editedStats]);
+
+
+
+  const fetchPackages = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_URL}/api/explore-packages`);
+      const json = await res.json();
+      const raw = json.data || {};
+      const flat = Array.isArray(raw) ? raw : Object.values(raw).flat();
+      setPackages(flat);
+    } catch (err) {
+      console.error("Error fetching packages:", err);
+      setPackages([]);
+    }
+  };
 
   const fetchAll = async (userData) => {
     setLoading(true);
@@ -381,10 +391,8 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
         const isReferral = userData.role === 'referral' || userData.franchiseType === 'referral' || userData.partnerType === 'referral';
         
         if (isReferral) {
-          // Referral partners have all their stats from the initial fetchUser call
           setStats(userData);
         } else {
-          // Franchise partners need extra stats (paymentStatus, agreementStatus, selectedPackage)
           const dashRes = await franchiseDashboardAPI.getDashboard();
           setStats(dashRes.data);
         }
@@ -397,27 +405,14 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
     }
   };
 
-  const fetchPackages = async () => {
-    try {
-      const res = await explorePackagesAPI.getPackages();
-
-      const raw = res.data?.data || res.data || {};
-      const flat = Object.values(raw).flat();
-
-      console.log("EXPLORE PACKAGES:", flat); // debug
-
-      setPackages(flat);
-    } catch (err) {
-      console.error("Error fetching packages:", err);
-      setPackages([]);
-    }
-  };
 
   const fetchTraining = async () => {
     try {
       const res = await adminAPI.getTrainingModules();
       setTraining(res.data.modules || []);
-    } catch { }
+    } catch (err) { 
+      console.error("TRAINING FETCH ERROR:", err);
+    }
   };
 
   const fetchSystemSettings = async () => {
@@ -520,8 +515,8 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-indigo-950">
-        <LoadingSpinner size="lg" color="border-indigo-400" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <LoadingSpinner size="lg" color="border-indigo-600" />
       </div>
     );
   }
@@ -574,125 +569,60 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
           </p>
         </div>
 
-        {/* Key Status Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 md:mb-8">
-          {!isActuallyReferral
-            ? [
-              {
-                label: "Package",
-                value: mergedStats?.selectedPackage?.packageName || "N/A",
-                sub: mergedStats?.selectedPackage?.category,
-                color: "bg-indigo-50 border-indigo-200",
-                text: "text-indigo-900",
-                editable: false,
-              },
-              {
-                label: "Payment",
-                value: mergedStats?.paymentStatus || "pending",
-                rawValue: mergedStats?.paymentStatus || "pending",
-                editKey: "paymentStatus",
-                color: "bg-emerald-50 border-emerald-200",
-                text: "text-emerald-900",
-                editable: true,
-                options: ["pending", "paid", "failed"],
-              },
-              {
-                label: "Agreement",
-                value: mergedStats?.agreementStatus || "pending",
-                rawValue: mergedStats?.agreementStatus || "pending",
-                editKey: "agreementStatus",
-                color: "bg-purple-50 border-purple-200",
-                text: "text-purple-900",
-                editable: true,
-                options: ["pending", "sent", "signed"],
-              },
-              {
-                label: "My Leads",
-                value: myLeads.length,
-                sub: "assigned",
-                color: "bg-blue-50 border-blue-200",
-                text: "text-blue-900",
-                editable: false,
-              },
-            ].map((c) => (
-              <EditableStatusCard
-                key={c.label}
-                c={c}
-                isEditMode={isAdminEditMode}
-                onEdit={handleAdminEdit}
-              />
-            ))
-            : [
-              {
-                label: "Total Earnings",
-                value: `₹${totalEarned.toLocaleString("en-IN")}`,
-                sub: "Lifetime",
-                color: "bg-emerald-50 border-emerald-200",
-                text: "text-emerald-900",
-                editable: false,
-              },
-              {
-                label: "Referrals",
-                value: mergedStats?.referralCount || 0,
-                rawValue: mergedStats?.referralCount || 0,
-                editKey: "referralCount",
-                sub: "Successful",
-                color: "bg-indigo-50 border-indigo-200",
-                text: "text-indigo-900",
-                editable: true,
-                inputType: "number",
-              },
-              {
-                label: "Pending",
-                value: mergedStats?.pendingApprovals || 0,
-                rawValue: mergedStats?.pendingApprovals || 0,
-                editKey: "pendingApprovals",
-                sub: "Approvals",
-                color: "bg-amber-50 border-amber-200",
-                text: "text-amber-900",
-                editable: true,
-                inputType: "number",
-              },
-              {
-                label: "Assigned Leads",
-                value: myLeads.length,
-                sub: "To you",
-                color: "bg-blue-50 border-blue-200",
-                text: "text-blue-900",
-                editable: false,
-              },
-            ].map((c) => (
-              <EditableStatusCard
-                key={c.label}
-                c={c}
-                isEditMode={isAdminEditMode}
-                onEdit={handleAdminEdit}
-              />
-            ))}
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-1 mb-8 bg-white rounded-2xl p-1.5 shadow-sm border overflow-x-auto">
-          {TABS.filter((t) => t.roles.includes(mergedStats?.role)).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${activeTab === tab.id
-                ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md"
-                : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-                }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
-              </svg>
-              {tab.label}
-            </button>
-          ))}
-        </div>
 
         {/* === OVERVIEW === */}
         {activeTab === "overview" && (
-          <div className="space-y-8">
+          <div className="space-y-6">
+
+            {/* Status Cards Row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {(!isActuallyReferral ? [
+                {
+                  label: "Package",
+                  value: mergedStats?.selectedPackage?.packageName || "N/A",
+                  sub: mergedStats?.selectedPackage?.category,
+                  color: "bg-indigo-50 border-indigo-200", text: "text-indigo-900", editable: false,
+                },
+                {
+                  label: "Payment",
+                  value: mergedStats?.paymentStatus || "pending",
+                  rawValue: mergedStats?.paymentStatus || "pending",
+                  editKey: "paymentStatus",
+                  color: "bg-emerald-50 border-emerald-200", text: "text-emerald-900", editable: true,
+                  options: ["pending", "paid", "failed"],
+                },
+                {
+                  label: "Agreement",
+                  value: mergedStats?.agreementAccepted ? "signed" : (mergedStats?.agreementStatus || "pending"),
+                  rawValue: mergedStats?.agreementAccepted ? "signed" : (mergedStats?.agreementStatus || "pending"),
+                  editKey: "agreementStatus",
+                  color: "bg-purple-50 border-purple-200", text: "text-purple-900", editable: true,
+                  options: ["pending", "sent", "signed"],
+                },
+                {
+                  label: "My Leads",
+                  value: myLeads.length, sub: "assigned",
+                  color: "bg-blue-50 border-blue-200", text: "text-blue-900", editable: false,
+                },
+              ] : [
+                {
+                  label: "Total Earnings", value: `₹${totalEarned.toLocaleString("en-IN")}`, sub: "Lifetime",
+                  color: "bg-emerald-50 border-emerald-200", text: "text-emerald-900", editable: false,
+                },
+                {
+                  label: "Referrals", value: mergedStats?.referralCount || 0, rawValue: mergedStats?.referralCount || 0,
+                  editKey: "referralCount", sub: "Successful",
+                  color: "bg-indigo-50 border-indigo-200", text: "text-indigo-900", editable: true, inputType: "number",
+                },
+                {
+                  label: "Assigned Leads", value: myLeads.length, sub: "To you",
+                  color: "bg-blue-50 border-blue-200", text: "text-blue-900", editable: false,
+                },
+              ]).map((c) => (
+                <EditableStatusCard key={c.label} c={c} isEditMode={isAdminEditMode} onEdit={handleAdminEdit} />
+              ))}
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {!isActuallyReferral
                 ? [
@@ -702,7 +632,8 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
                     // rawValue: mergedStats?.commissionRate,
                     editKey: "commissionRate",
                     note: isActuallyReferral ? "Referral Rate" : mergedStats?.franchiseType === "sathi" ? "Sathi Premium Rate" : "Dost Rate",
-                    color: "from-purple-500 to-indigo-600",
+                    iconBg: "bg-purple-100",
+                    iconColor: "text-purple-600",
                     icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
                     editable: true,
                     inputType: "number",
@@ -711,7 +642,8 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
                     label: "Package Price",
                     value: mergedStats?.selectedPackage?.price ? `₹${mergedStats.selectedPackage.price.toLocaleString("en-IN")}` : "—",
                     note: mergedStats?.selectedPackage?.packageName,
-                    color: "from-blue-500 to-cyan-500",
+                    iconBg: "bg-blue-100",
+                    iconColor: "text-blue-600",
                     icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m0 0v10l8 4",
                     editable: false,
                   },
@@ -719,7 +651,8 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
                     label: "Training Progress",
                     value: `${mergedStats?.trainingProgress?.completedModules || 0} / ${training.length}`,
                     note: "modules completed",
-                    color: "from-emerald-500 to-teal-600",
+                    iconBg: "bg-emerald-100",
+                    iconColor: "text-emerald-600",
                     icon: "M12 14l9-5-9-5-9 5 9 5z",
                     editable: false,
                   },
@@ -771,6 +704,45 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
                   />
                 ))}
             </div>
+
+            {/* Purchased Service Packages */}
+            {!isActuallyReferral && (
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 text-lg">🛍️</span>
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-base">My Purchased Services</h3>
+                    <p className="text-xs text-slate-400">Service packages you have bought</p>
+                  </div>
+                </div>
+                
+                {mergedStats?.purchasedServices && mergedStats.purchasedServices.length > 0 ? (
+                  <div className="space-y-3">
+                    {mergedStats.purchasedServices.map((service, idx) => (
+                      <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50 border border-slate-100 rounded-xl p-4 gap-4">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full mb-1 inline-block">
+                            {service.category || 'Service'}
+                          </span>
+                          <h4 className="font-bold text-slate-800 text-sm">{service.packageName}</h4>
+                          <p className="text-xs text-slate-500 mt-0.5">Purchased on: {new Date(service.purchasedAt).toLocaleDateString()}</p>
+                        </div>
+                        <div className="text-left sm:text-right flex flex-col items-start sm:items-end w-full sm:w-auto">
+                          <p className="font-bold text-emerald-700 text-base">₹{(service.price || 0).toLocaleString('en-IN')}</p>
+                          <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full mt-1">✓ Paid</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-6 text-center">
+                    <span className="text-2xl mb-2 block">🛒</span>
+                    <p className="text-sm font-semibold text-slate-700">No services purchased yet</p>
+                    <p className="text-xs text-slate-400 mt-1">When you buy a service package, it will appear here.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Referral-only section */}
             {mergedStats?.role === "referral" && (
@@ -891,41 +863,7 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
           </div>
         )}
 
-        {/* === PACKAGES === */}
-        {activeTab === "packages" && (
-          <div>
-            <h2 className="text-xl font-bold text-slate-800 mb-6">Available Packages</h2>
-            {packages.length === 0 ? (
-              <div className="bg-white rounded-2xl border p-12 text-center text-slate-400">No packages available.</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {packages.map((pkg) => {
-                  const isCurrent = mergedStats?.selectedPackage?.packageName === pkg.name;
-                  return (
-                    <div key={pkg.id || pkg._id} className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition p-6 ${isCurrent ? "border-indigo-400 ring-2 ring-indigo-200" : ""}`}>
-                        {(isCurrent && activeTab !== "packages") && <div className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full inline-block mb-2">✓ Current Package</div>}
-                      <span className="text-xs font-bold uppercase text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">{pkg.categoryName || pkg.category}</span>
-                      <h3 className="text-lg font-bold text-slate-900 mt-2 mb-1">{pkg.Name || pkg.name}</h3>
-                      <p className="text-slate-500 text-sm mb-3">{pkg.description || pkg.Description}</p>
-                      <p className="text-2xl font-bold text-slate-900 mb-1">₹{(pkg.price || pkg.Price)?.toLocaleString("en-IN")}</p>
-                      {pkg.commission > 0 && <p className="text-sm text-green-600 font-semibold mb-3">You earn {pkg.commission}% commission</p>}
-                      <ul className="space-y-1.5">
-                        {(pkg.features || []).slice(0, 5).map((f, i) => (
-                          <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                            <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
+
 
         {/* === LEADS === */}
         {activeTab === "leads" && (
@@ -1247,7 +1185,9 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
                 <div className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
                   <span className="text-slate-500 text-sm">Member Since</span>
                   <span className="font-semibold text-sm text-slate-800">
-                    {mergedStats?.joinedDate ? new Date(mergedStats.joinedDate).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" }) : "—"}
+                    {(mergedStats?.joinedDate || mergedStats?.createdAt) 
+                      ? new Date(mergedStats.joinedDate || mergedStats.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" }) 
+                      : "—"}
                   </span>
                 </div>
               </div>
@@ -1303,10 +1243,10 @@ export default function FranchiseDashboard({ adminPartner, isAdminEditMode = fal
                 <h3 className="font-bold text-slate-800 mb-3">📅 Request a Meeting</h3>
                 <p className="text-slate-500 text-sm mb-4">Schedule a call with our franchise support team.</p>
                 <a 
-                  href={systemSettings?.meetingLink || systemSettings?.settings?.meetingLink || `mailto:support@dgtlmart.com?subject=Meeting Request - ${mergedStats?.fullName}`} 
-                  target={systemSettings?.meetingLink || systemSettings?.settings?.meetingLink ? "_blank" : "_self"}
-                  rel={systemSettings?.meetingLink || systemSettings?.settings?.meetingLink ? "noopener noreferrer" : ""}
-                  className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm"
+                  href={systemSettings?.meetingLink || systemSettings?.settings?.meetingLink || `https://mail.google.com/mail/?view=cm&fs=1&to=contact@dgtlmart.com&su=Meeting%20Request%20-%20${mergedStats?.fullName}`} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm cursor-pointer"
                 >
                   📧 Request Meeting
                 </a>

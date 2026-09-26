@@ -20,7 +20,7 @@ export default function ApplicationsManagement() {
     try {
       // Fetch both referral and franchise (if API supports it, otherwise fetch one by one and merge)
       // The current API allows no type to fetch all, or we can fetch franchise only as per request.
-      const response = await adminAPI.getReferrals({ page: 1, limit: 100, type: "franchise" });
+      const response = await adminAPI.getReferrals({ page: 1, limit: 100 });
       setApplications(response.data?.referrals || []);
     } catch (error) {
       console.error("Error fetching applications:", error);
@@ -48,6 +48,42 @@ export default function ApplicationsManagement() {
     }
   };
 
+  const handleDetailsStatusChange = async (id, newStatus) => {
+    if (!window.confirm(`Are you sure you want to change the details status to ${newStatus}?`)) return;
+    
+    setUpdatingId(id);
+    try {
+      await adminAPI.updateReferral(id, { detailsStatus: newStatus });
+      showToast("Details status updated successfully");
+      setApplications((prev) =>
+        prev.map((app) => (app._id === id ? { ...app, detailsStatus: newStatus } : app))
+      );
+    } catch (error) {
+      console.error("Error updating details status:", error);
+      showToast("Failed to update details status", "error");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleMeetingStatusChange = async (id, newStatus) => {
+    if (!window.confirm(`Are you sure you want to change the meeting status to ${newStatus}?`)) return;
+    
+    setUpdatingId(id);
+    try {
+      await adminAPI.updateReferral(id, { meetingStatus: newStatus });
+      showToast("Meeting status updated successfully");
+      setApplications((prev) =>
+        prev.map((app) => (app._id === id ? { ...app, meetingStatus: newStatus } : app))
+      );
+    } catch (error) {
+      console.error("Error updating meeting status:", error);
+      showToast("Failed to update meeting status", "error");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const StatusBadge = ({ status }) => {
     const colors = {
       PENDING: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -68,7 +104,11 @@ export default function ApplicationsManagement() {
     app.ndaDocumentUrl || 
     app.signedAgreementUrl || 
     app.panNumber || 
-    app.aadharNumber
+    app.aadharNumber ||
+    app.detailsStatus === 'PENDING' ||
+    app.detailsStatus === 'APPROVED' ||
+    app.meetingStatus === 'PENDING' ||
+    app.meetingStatus === 'COMPLETED'
   );
 
   return (
@@ -109,9 +149,20 @@ export default function ApplicationsManagement() {
                       <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
                         {app.fullName}
                         <StatusBadge status={app.status} />
+                        {app.detailsStatus === 'PENDING' && (
+                          <span className="px-2 py-1 bg-purple-100 text-purple-800 border border-purple-200 rounded-full text-[10px] font-bold uppercase">Details Pending</span>
+                        )}
+                        {app.detailsStatus === 'APPROVED' && (
+                          <span className="px-2 py-1 bg-green-100 text-green-800 border border-green-200 rounded-full text-[10px] font-bold uppercase">Details Approved</span>
+                        )}
                       </h2>
                       <p className="text-sm text-gray-500 mt-1">
                         Applied on {new Date(app.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        {app.status === 'ACTIVE' && (
+                          <span className="ml-2 pl-2 border-l border-gray-300">
+                            Activated on {new Date(app.updatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </span>
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
@@ -134,14 +185,6 @@ export default function ApplicationsManagement() {
                         <div>
                           <p className="text-xs text-gray-500 mb-1">Phone Number</p>
                           <p className="font-medium text-gray-900">{app.phone}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">Business Name</p>
-                          <p className="font-medium text-gray-900">{app.businessName || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">Partner Type</p>
-                          <p className="font-medium text-gray-900 capitalize">{app.franchiseType || app.role || 'N/A'}</p>
                         </div>
 
                         <div>
@@ -187,74 +230,99 @@ export default function ApplicationsManagement() {
 
                     {/* Right Column: Documents & Actions */}
                     <div className="space-y-6">
-                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider border-b pb-2">Uploaded Documents</h3>
+                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider border-b pb-2">Terms & Agreements</h3>
                       <div className="space-y-3">
-                        
-                        {/* KYC Doc */}
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                           <div className="flex items-center gap-3">
-                            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            <span className="font-medium text-sm text-gray-900">KYC Document</span>
+                            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="font-medium text-sm text-gray-900">Partner Terms & NDA</span>
                           </div>
-                          {app.kycDocumentUrl ? (
-                            <a href={app.kycDocumentUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold text-sm hover:underline">View File</a>
+                          {app.agreementAccepted ? (
+                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-md">Accepted</span>
                           ) : (
-                            <span className="text-gray-400 text-sm italic">Not Uploaded</span>
+                            <span className="text-gray-400 text-sm italic">Not Accepted</span>
                           )}
                         </div>
-
-                        {/* NDA Doc */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                          <div className="flex items-center gap-3">
-                            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            <span className="font-medium text-sm text-gray-900">Signed NDA</span>
-                          </div>
-                          {app.ndaDocumentUrl ? (
-                            <a href={app.ndaDocumentUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold text-sm hover:underline">View File</a>
-                          ) : (
-                            <span className="text-gray-400 text-sm italic">Not Uploaded</span>
-                          )}
-                        </div>
-
-                        {/* Agreement Doc */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                          <div className="flex items-center gap-3">
-                            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            <span className="font-medium text-sm text-gray-900">Signed Agreement</span>
-                          </div>
-                          {app.signedAgreementUrl ? (
-                            <a href={app.signedAgreementUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold text-sm hover:underline">View File</a>
-                          ) : (
-                            <span className="text-gray-400 text-sm italic">Not Uploaded</span>
-                          )}
-                        </div>
-
                       </div>
 
                       {/* Approval Actions */}
-                      <div className="mt-6 pt-4 border-t flex gap-3">
-                        {app.status === 'PENDING' && (
-                          <button
-                            onClick={() => handleStatusChange(app._id, 'ACTIVE')}
-                            className="flex-1 py-2.5 bg-green-600 text-white rounded-lg font-bold shadow hover:bg-green-700 transition-colors"
-                          >
-                            Approve
-                          </button>
+                      <div className="mt-6 pt-4 border-t flex flex-col gap-3">
+                        {app.detailsStatus === 'PENDING' && (
+                          <div className="flex gap-3 w-full">
+                            <button
+                              onClick={() => handleDetailsStatusChange(app._id, 'APPROVED')}
+                              className="flex-1 py-2.5 bg-purple-600 text-white rounded-lg font-bold shadow hover:bg-purple-700 transition-colors text-sm"
+                            >
+                              Approve Details Only
+                            </button>
+                            <button
+                              onClick={() => handleDetailsStatusChange(app._id, 'REJECTED')}
+                              className="flex-1 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold hover:bg-red-100 transition-colors text-sm"
+                            >
+                              Reject Details
+                            </button>
+                          </div>
                         )}
-                        {app.status !== 'REJECTED' && (
-                          <button
-                            onClick={() => handleStatusChange(app._id, 'REJECTED')}
-                            className="flex-1 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold hover:bg-red-100 transition-colors"
-                          >
-                            Reject
-                          </button>
+                        
+                        {app.detailsStatus === 'APPROVED' && (!app.meetingStatus || app.meetingStatus === 'NOT_SCHEDULED') && (
+                          <div className="p-3 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            Details Approved! Waiting for user to schedule a meeting.
+                          </div>
                         )}
-                      </div>
 
+                        {app.meetingStatus === 'PENDING' && (
+                          <div className="flex gap-3 w-full">
+                            <button
+                              onClick={() => handleMeetingStatusChange(app._id, 'COMPLETED')}
+                              className="flex-1 py-2.5 bg-orange-500 text-white rounded-lg font-bold shadow hover:bg-orange-600 transition-colors text-sm"
+                            >
+                              Mark Meeting Completed
+                            </button>
+                          </div>
+                        )}
+
+                        {app.meetingStatus === 'COMPLETED' && app.status !== 'ACTIVE' && (
+                          <div className="p-3 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            Meeting Completed! Awaiting final Franchise Approval.
+                          </div>
+                        )}
+
+                        {app.status === 'ACTIVE' && (
+                          <div className="p-3 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm font-bold flex items-center justify-center gap-2">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Fully Approved Franchise
+                          </div>
+                        )}
+
+                        {app.status !== 'ACTIVE' && (
+                          <div className="flex gap-3 w-full">
+                          {app.status === 'PENDING' && (
+                            <button
+                              onClick={() => handleStatusChange(app._id, 'ACTIVE')}
+                              className="flex-1 py-2.5 bg-green-600 text-white rounded-lg font-bold shadow hover:bg-green-700 transition-colors"
+                            >
+                              Approve Franchise
+                            </button>
+                          )}
+                          {app.status !== 'REJECTED' && (
+                            <button
+                              onClick={() => handleStatusChange(app._id, 'REJECTED')}
+                              className="flex-1 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold hover:bg-red-100 transition-colors"
+                            >
+                              Reject Franchise
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
             </div>
           )}
         </div>

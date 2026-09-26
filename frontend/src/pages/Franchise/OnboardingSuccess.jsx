@@ -175,14 +175,11 @@ export default function OnboardingSuccess() {
 
           {/* CTA */}
           {activeStep >= ONBOARDING_STEPS.length && (
-            <div className="mt-5 text-center">
-              <button
-                onClick={() => navigate("/waiting-for-approval")}
-                className="px-8 py-3 bg-gray-900 text-white font-semibold text-sm rounded-xl shadow hover:bg-black hover:shadow-lg transition-all"
-              >
-                Continue to Dashboard &rarr;
-              </button>
-              <p className="text-gray-400 text-xs mt-2">Your partner dashboard will be accessible after admin approval</p>
+            <div className="mt-5 text-center bg-blue-50 border border-blue-200 rounded-xl p-4 shadow-sm">
+              <h3 className="font-bold text-blue-900 text-sm mb-1">Final Step: Admin Verification</h3>
+              <p className="text-blue-700 text-xs">
+                Your payment and agreements have been successfully received. Please wait for final admin approval to access your partner dashboard.
+              </p>
             </div>
           )}
 

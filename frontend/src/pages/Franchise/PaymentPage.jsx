@@ -32,7 +32,7 @@ const PACKAGE_DETAILS = {
     commission: '60%',
     subtitle: 'Best for: Small agencies, consultants',
     features: [
-      'Maximum Commission 40%',
+      'Maximum Commission 60%',
       'Higher earnings potential',
       'Dedicated support',
       'Access to marketing resources',

@@ -219,8 +219,8 @@ const [resendTimer, setResendTimer] = useState(0);
         {/* Right Side - Registration Form */}
         <div className="flex-1 bg-gray-50/50 flex flex-col items-center justify-center p-4 sm:p-8 lg:p-12 xl:p-8">
           <div className={`w-full max-w-xl transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-10">
-              <div className="mb-6 ">
+            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:px-10 sm:pb-10 sm:pt-2">
+              <div className="mb-6">
                 <h2 className="text-3xl font-bold text-gray-900 mb-2">
                   Become a {formData.partnerType === 'franchise' ? 'Franchise' : 'Referral'} Partner
                 </h2>
@@ -287,7 +287,7 @@ const [resendTimer, setResendTimer] = useState(0);
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleChange}
-                      placeholder=""
+                      placeholder="e.g. John Doe"
                       required
                       className="!rounded-2xl"
                     />
@@ -298,7 +298,8 @@ const [resendTimer, setResendTimer] = useState(0);
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder=""
+                      placeholder="e.g. john@example.com"
+                      required
                       className="!rounded-2xl"
                     />
                     
@@ -308,7 +309,7 @@ const [resendTimer, setResendTimer] = useState(0);
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      placeholder=""
+                      placeholder="Enter password"
                       required
                       className="!rounded-2xl"
                     />
@@ -319,7 +320,7 @@ const [resendTimer, setResendTimer] = useState(0);
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      placeholder=""
+                      placeholder="Confirm password"
                       required
                       className="!rounded-2xl"
                     />
@@ -330,31 +331,18 @@ const [resendTimer, setResendTimer] = useState(0);
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder=""
-                      required
-                      className="!rounded-2xl"
-                    />
-                    
-                     <Input
-                      label="City/Location"
-                      type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleChange}
-                      placeholder=""
+                      placeholder="e.g. 9876543210"
                       required
                       className="!rounded-2xl"
                     />
 
-                      
                      <Input
                       label="Business Name (optional)"
                       type="text"
                       name="businessName"
                       value={formData.businessName}
                       onChange={handleChange}
-                      placeholder=""
-                      required
+                      placeholder="e.g. ABC Corp"
                       className="!rounded-2xl"
                     />
 
@@ -365,7 +353,7 @@ const [resendTimer, setResendTimer] = useState(0);
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    placeholder=""
+                    placeholder="e.g. 123 Main St, City, State, ZIP"
                     required
                     className="!rounded-2xl"
                   />

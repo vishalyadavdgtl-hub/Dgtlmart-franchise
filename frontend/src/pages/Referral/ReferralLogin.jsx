@@ -109,8 +109,10 @@ export default function ReferralLogin() {
 
       setTimeout(() => {
         const partner = response.data.partner;
-        if (partner.status !== "ACTIVE") {
-          navigate('/waiting-for-approval', { replace: true });
+        
+        // Block dashboard access until the entire process (details, package, docs, meeting, admin activation) is complete
+        if (partner.status !== 'ACTIVE') {
+          navigate('/referral-success', { replace: true, state: { partner } });
           return;
         }
 
@@ -143,10 +145,13 @@ export default function ReferralLogin() {
             showToast('Login successful!', 'success');
             setTimeout(() => {
               const partner = retryResponse.data.partner;
-              if (partner.status !== "ACTIVE") {
-                navigate('/waiting-for-approval', { replace: true });
+              
+              // Block dashboard access until the entire process is complete
+              if (partner.status !== 'ACTIVE') {
+                navigate('/referral-success', { replace: true, state: { partner } });
                 return;
               }
+
               const destination = '/dashboard';
               const from = location.state?.from?.pathname || destination;
               navigate(from, { replace: true });

@@ -168,13 +168,14 @@ const franchiseType = location.state?.franchiseType || "";
         localStorage.setItem("partnerToken", response.data.token);
       }
 
-      navigate("/waiting-for-approval", {
+      navigate("/referral-success", {
         state: {
-          buyer: {
+          partner: {
             fullName: formData.fullName,
             email: formData.email,
             businessName: formData.businessName,
             package: selectedPackage,
+            detailsStatus: 'NOT_SUBMITTED' // Enforce filling application
           },
         },
       });
@@ -204,13 +205,14 @@ const franchiseType = location.state?.franchiseType || "";
         localStorage.setItem("partnerToken", response.data.token);
       }
 
-      navigate("/waiting-for-approval", {
+      navigate("/referral-success", {
         state: {
-          buyer: {
+          partner: {
             fullName: formData.fullName,
             email: formData.email,
             businessName: formData.businessName,
             package: selectedPackage,
+            detailsStatus: 'NOT_SUBMITTED' // Enforce filling application
           },
         },
       });
@@ -260,14 +262,15 @@ const franchiseType = location.state?.franchiseType || "";
               localStorage.setItem("partnerToken", response.data.token);
             }
 
-            navigate("/waiting-for-approval", {
+            navigate("/referral-success", {
               state: {
-                buyer: {
+                partner: {
+                  id: response.data.buyerId,
                   fullName: formData.fullName,
                   email: formData.email,
                   businessName: formData.businessName,
                   package: selectedPackage,
-                  buyerId: response.data.buyerId,
+                  detailsStatus: 'NOT_SUBMITTED' // Enforce filling application
                 },
               },
             });

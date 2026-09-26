@@ -30,8 +30,24 @@ export default function ScheduleMeeting() {
     fetchSettings();
   }, []);
 
-  const handleProceedToPayment = () => {
-    navigate('/payment', { state: { franchiseType: partnerType, partner: partner } });
+  const handleMeetingScheduled = async () => {
+    try {
+      setLoading(true);
+      await api.post('/referral/schedule-meeting', { userId: partner._id || partner.id });
+      
+      showToast('Meeting scheduled successfully! Pending admin approval.', 'success');
+      
+      // Navigate back to referral-success, updating local partner state
+      navigate('/referral-success', { 
+        state: { 
+          partner: { ...partner, meetingStatus: 'PENDING' } 
+        } 
+      });
+    } catch (err) {
+      console.error(err);
+      showToast('Error saving meeting status', 'error');
+      setLoading(false);
+    }
   };
 
   // Detect platform from URL
@@ -59,10 +75,10 @@ export default function ScheduleMeeting() {
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-3 md:p-4 text-center text-white">
               <h1 className="text-lg md:text-xl font-bold mb-1 flex items-center justify-center gap-2">
-                <span className="text-2xl">🎉</span> Documents Submitted!
+                <span className="text-2xl">📅</span> Schedule Discovery Call
               </h1>
               <p className="text-blue-100 text-xs md:text-sm max-w-lg mx-auto leading-tight">
-                Your documents have been received successfully. The next step is to schedule a quick <strong>Discovery Call</strong> with the DGTL Mart team.
+                Your details have been approved! The next step is to schedule a quick <strong>Discovery Call</strong> with the DGTL Mart team.
               </p>
             </div>
 
@@ -119,16 +135,16 @@ export default function ScheduleMeeting() {
                 </div>
               </div>
 
-              {/* Divider */}
               <div className="mt-8 pt-6 border-t border-gray-100 text-center">
                 <p className="text-sm text-gray-400 mb-3">
-                  Already scheduled? Go to your dashboard:
+                  Done picking a time slot?
                 </p>
                 <button
-                  onClick={handleProceedToPayment}
-                  className="px-8 py-2.5 text-gray-600 border-2 border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-900 font-medium transition-all"
+                  onClick={handleMeetingScheduled}
+                  disabled={loading}
+                  className="px-8 py-2.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 font-medium transition-all"
                 >
-                  I've scheduled my meeting — Proceed to Payment →
+                  {loading ? 'Processing...' : "I've scheduled my meeting →"}
                 </button>
               </div>
             </div>

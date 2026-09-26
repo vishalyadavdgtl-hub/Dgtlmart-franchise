@@ -13,9 +13,14 @@ export default function ApprovedFranchiseRoute({ children }) {
     return <Navigate to="/partner-login" replace />;
   }
 
-  // If the partner is logged in but not approved, redirect to waiting screen
-  if (!partnerUser.isApproved) {
-    return <Navigate to="/waiting-for-approval" replace />;
+  // Approval check removed for partner account status
+  // if (!partnerUser.isApproved) {
+  //   return <Navigate to="/waiting-for-approval" replace />;
+  // }
+
+  // If user hasn't completed the full onboarding process (which sets their account to ACTIVE)
+  if (partnerUser.status !== 'ACTIVE') {
+    return <Navigate to="/referral-success" replace state={{ partner: partnerUser }} />;
   }
 
   return children;
